@@ -120,10 +120,11 @@ def process_message(message):
                 room = None
                 for room_ in rooms:
                     if room_number == room_.number:
-                        room = room_
-                        break
+                        if message.author.id == room.owner.id:
+                            room = room_
+                            break
                 if room is None:
-                    reply = "その番号の部屋はありません"
+                    reply = "その番号の部屋がないか、ホストではないため爆破できません"
                 else:
                     delete_room(room)
                     reply = f"爆破: [{room.number}] {room.name}\n" + " ".join(f"{member.mention}" for member in room.members)
