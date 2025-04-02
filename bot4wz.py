@@ -80,6 +80,7 @@ def to_int(string):
         return None
 
 def get_name(user):
+    # サーバーニックネーム、表示名、ユーザー名（グローバル）の順に名前を探す
     for name in [user.nick, user.display_name, user.name]:
         if name is not None:
             return name
