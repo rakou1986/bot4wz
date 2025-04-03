@@ -53,6 +53,7 @@ usage = """\
 
 ホスト
   部屋建て --yyk 部屋名（デフォルト無制限）
+  1～6人を募集 --yyk1～6 部屋名
   爆破する --bakuha 部屋番号（1つしか立ててないときは省略可能）
 
 参加者
@@ -65,13 +66,12 @@ usage = """\
 """
 
 class Room(object):
-    def __init__(self, message):
+    def __init__(self, message, name, capacity):
         self.number = room_number_pool.pop(0)
-        self.name = message.content.split("--yyk")[1]
-        if self.name == "":
-            self.name = "無制限"
+        self.name = name
         self.owner = message.author
         self.members = [message.author]
+        self.capacity = capacity
 
 def to_int(string):
     try:
@@ -94,10 +94,17 @@ def delete_room(room):
 def process_message(message):
     reply = "初期値。問題が起きているのでrakouに連絡"
     if message.content.startswith("--yyk"):
-        room = Room(message)
+        capacity = 8
+        name = message.content.split("--yyk")[1]
+        if name:
+            if name[0] in ["1", "2", "3", "4", "5", "6", "１", "２", "３", "４", "５", "６"]:
+                capacity = to_int(name[0]) + 1
+                name = name.replace(name[0], "")
+        name = "無制限" if not name else name.strip()
+        room = Room(message=message, name=name, capacity=capacity)
         rooms.append(room)
         rooms.sort(key=lambda room: room.number)
-        reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+        reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
 
     if message.content.startswith("--bakuha"):
         room_number = message.content.split("--bakuha")[1]
@@ -109,7 +116,7 @@ def process_message(message):
             if len(owned_rooms) == 1:
                 room = owned_rooms[0]
                 delete_room(room)
-                reply = f"爆破: [{room.number}] {room.name}\n" + " ".join(f"{member.mention}" for member in room.members)
+                reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
             else:
                 reply = "複数の部屋を建てたときは部屋番号を指定してね"
         else:
@@ -127,7 +134,7 @@ def process_message(message):
                     reply = "その番号の部屋がないか、ホストではないため爆破できません"
                 else:
                     delete_room(room)
-                    reply = f"爆破: [{room.number}] {room.name}\n" + " ".join(f"{member.mention}" for member in room.members)
+                    reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
 
     if message.content.startswith("--no"):
         room_number = message.content.split("--no")[1]
@@ -137,7 +144,7 @@ def process_message(message):
                 room = rooms[0]
                 if not message.author in room.members:
                     room.members.append(message.author)
-                    reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                    reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
                 else:
                     reply = "もう入ってるよ"
             else:
@@ -157,13 +164,12 @@ def process_message(message):
                 else:
                     if not message.author in room.members:
                         room.members.append(message.author)
-                        reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                        reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
                     else:
                         reply = "もう入ってるよ"
-
         if room is not None:
-            if len(room.members) == 8:
-                reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
+            if len(room.members) == room.capacity:
+                reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
                 delete_room(room)
 
     if message.content.startswith("--nuke"):
@@ -181,7 +187,7 @@ def process_message(message):
                     reply = "ホストが抜けるときは--bakuhaを使ってね"
                 else:
                     room.members.pop(room.members.index(message.author))
-                    reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                    reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
             elif len(entered_rooms) == 0:
                 reply = "どこにも入ってないよ"
             else:
@@ -206,12 +212,12 @@ def process_message(message):
                         reply = "ホストが抜けるときは--bakuhaを使ってね"
                     else:
                         room.members.pop(room.members.index(message.author))
-                        reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                        reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
 
     if message.content.startswith("--rooms"):
         lines = []
         for room in rooms:
-            lines.append(f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
+            lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
         if lines:
             reply = "\n".join(lines)
         else:
