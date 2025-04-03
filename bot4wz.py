@@ -258,7 +258,7 @@ async def on_message(message):
 
     if message.channel.name == "general（de）":
         for command in commands:
-            if command in message.content:
+            if message.content.startswith(command):
                 print(f"INPUT:\n{message.content}\n")
                 reply = process_message(message)
                 await message.channel.send(reply, allowed_mentions=allowed_mentions)
