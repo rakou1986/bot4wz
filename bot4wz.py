@@ -38,7 +38,7 @@ import asyncio
 
 from pprint import pprint
 
-TOKEN = "YOUR_DISCORD_APP_TOkEN_HERE"
+TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -182,6 +182,8 @@ def process_message(message):
                 else:
                     room.members.pop(room.members.index(message.author))
                     reply = f"[{room.number}] {room.name}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+            elif len(entered_rooms) == 0:
+                reply = "どこにも入ってないよ"
             else:
                 reply = "複数の部屋に入っているときは部屋番号を指定してね"
         else:
@@ -192,10 +194,13 @@ def process_message(message):
                 room = None
                 for room_ in rooms:
                     if room_number == room_.number:
-                        room = room_
+                        for member in room_.members:
+                            if message.author.id == member.id:
+                                room = room_
+                                break
                         break
                 if room is None:
-                    reply = "その番号の部屋はありません"
+                    reply = "その番号の部屋がないか、入っていないので抜けれません"
                 else:
                     if room.owner == message.author:
                         reply = "ホストが抜けるときは--bakuhaを使ってね"
@@ -236,19 +241,19 @@ async def on_message(message):
     if message.channel.name == "general":
         for command in commands:
             if command in message.content:
-                print(f"INPUT:\n{message.content}")
+                print(f"INPUT:\n{message.content}\n")
                 reply = process_message(message)
                 await message.channel.send(reply, allowed_mentions=allowed_mentions)
-                print(f"OUTPUT:\n{reply}")
+                print(f"OUTPUT:\n{reply}\n")
 
     # warzone
     if message.channel.name == "general（de）":
         for command in commands:
             if command in message.content:
-                print(f"INPUT:\n{message.content}")
+                print(f"INPUT:\n{message.content}\n")
                 reply = process_message(message)
                 await message.channel.send(reply, allowed_mentions=allowed_mentions)
-                print(f"OUTPUT:\n{reply}")
+                print(f"OUTPUT:\n{reply}\n")
 
     await bot.process_commands(message)
 
