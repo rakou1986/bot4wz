@@ -86,6 +86,7 @@ class RoomPicklable(object):
         self.owner_id = room.owner.id
         self.member_ids = [user.id for user in room.members]
         self.capacity = room.capacity
+        self.garbage_queue = room.garbage_queue
 
     async def to_room(self, bot):
         guild = bot.get_guild(guild_id)
@@ -114,12 +115,14 @@ class RoomPicklable(object):
 
 
 class Room(object):
+
     def __init__(self, author , name, capacity):
         self.number = room_number_pool.pop(0)
         self.name = name
         self.owner = author
         self.members = [author]
         self.capacity = capacity
+        self.garbage_queue = []
 
 
 async def save():
@@ -168,6 +171,7 @@ def delete_room(room):
 async def process_message(message):
     async with lock:
         reply = "初期値。問題が起きているのでrakouに連絡"
+        room_to_clean = None
         if message.content.startswith("--yyk"):
             capacity = 8
             name = message.content.split("--yyk")[1]
@@ -178,8 +182,9 @@ async def process_message(message):
             name = "無制限" if not name else name.strip()
             room = Room(author=message.author, name=name, capacity=capacity)
             rooms.append(room)
-            rooms.sort(key=lambda room: room.number)
             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+            room_to_clean = room
+            rooms.sort(key=lambda room: room.number)
 
         if message.content.startswith("--bakuha"):
             room_number = message.content.split("--bakuha")[1]
@@ -192,6 +197,7 @@ async def process_message(message):
                     room = owned_rooms[0]
                     delete_room(room)
                     reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
+                    room_to_clean = room
                 else:
                     reply = "複数の部屋を建てたときは部屋番号を指定してね"
             else:
@@ -210,6 +216,7 @@ async def process_message(message):
                     else:
                         delete_room(room)
                         reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
+                        room_to_clean = room
 
         if message.content.startswith("--no"):
             room_number = message.content.split("--no")[1]
@@ -220,6 +227,7 @@ async def process_message(message):
                     if not message.author in room.members:
                         room.members.append(message.author)
                         reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                        room_to_clean = room
                     else:
                         reply = "もう入ってるよ"
                 elif len(rooms) == 0:
@@ -242,12 +250,14 @@ async def process_message(message):
                         if not message.author in room.members:
                             room.members.append(message.author)
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                            room_to_clean = room
                         else:
                             reply = "もう入ってるよ"
             if room is not None:
                 if len(room.members) == room.capacity:
                     reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
                     delete_room(room)
+                    room_to_clean = room
 
         if message.content.startswith("--nuke"):
             room_number = message.content.split("--nuke")[1]
@@ -265,6 +275,7 @@ async def process_message(message):
                     else:
                         room.members.pop(room.members.index(message.author))
                         reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                        room_to_clean = room
                 elif len(entered_rooms) == 0:
                     reply = "どこにも入ってないよ"
                 else:
@@ -290,6 +301,7 @@ async def process_message(message):
                         else:
                             room.members.pop(room.members.index(message.author))
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                            room_to_clean = room
 
         if message.content.startswith("--rooms"):
             lines = []
@@ -315,13 +327,26 @@ async def process_message(message):
                 else:
                     delete_room(room)
                     reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                    room_to_clean = room
 
         if message.content.startswith("--help"):
             reply = usage
 
-        print(rooms)
-        await save()
-        return reply
+        return reply, room_to_clean
+
+async def room_cleaner(room, received_message, sent_message):
+    room.garbage_queue.append(sent_message.id)
+    while True:
+        if 1 < len(room.garbage_queue):
+            message_id = room.garbage_queue.pop(0)
+            try:
+                msg = await received_message.channel.fetch_message(message_id)
+                await msg.delete()
+            except discord.NotFound:
+                pass
+        else:
+            break
+
 
 @bot.event
 async def on_ready():
@@ -341,9 +366,13 @@ async def on_message(message):
         for command in commands:
             if message.content.startswith(command):
                 print(f"INPUT:\n{message.content}\n")
-                reply = await process_message(message)
-                await message.channel.send(reply, allowed_mentions=allowed_mentions)
+                reply, room_to_clean = await process_message(message)
+                sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
+                if room_to_clean:
+                    await room_cleaner(room_to_clean, message, sent_message)
                 print(f"OUTPUT:\n{reply}\n")
+                print(rooms)
+                await save()
 
     await bot.process_commands(message)
 
