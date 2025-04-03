@@ -1,0 +1,38 @@
+```
+Python3.6.3インストーラーダウンロード
+https://repo.anaconda.com/archive/Anaconda3-5.0.1-Windows-x86_64.exe
+Anacondaはいろんなライブラリがバンドルされてる便利パッケージ
+
+インストーラ―では何も選択せず全部Next
+最後はチェックを外してFinish
+
+C:\Users\<username>\Anaconda3\python.exeがあるのを確認
+Windowsの設定でenvと入力
+システム環境変数の編集 > 環境変数 > Pathを選択 > 編集 > 新規
+C:\Users\<username>\Anaconda3
+を入力して一番上へ移動させて保存
+
+cmd / PowerShellで
+python -V
+Python 3.6.3 :: Anaconda, Inc.
+を確認
+
+python -m pip install --upgrade pip
+python -m pip install discord==1.7.3
+
+python -m discord --version
+- discord.py v1.7.3-final
+を確認
+
+bot4wz.py, app_token.pyを同じフォルダに置く
+cd そのフォルダ
+python bot4wz.py
+
+必ず Ctrl + C で終了（しばらく待つ）
+
+botが1回応答するとそのフォルダに
+room_number_pool.bot4wz.pickle
+rooms.bot4wz.pickle
+temp_message_ids.bot4wz.pickle
+というファイルが作られる。なくさない。触らない。
+```
