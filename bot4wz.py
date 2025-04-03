@@ -52,12 +52,12 @@ usage = """\
 つかいかた:
 
 ホスト
-  部屋建て --yyk empty or "room name"
-  爆破する --bakuha "room number"
+  部屋建て --yyk 部屋名（デフォルト無制限）
+  爆破する --bakuha 部屋番号（1つしか立ててないときは省略可能）
 
 参加者
-  参加する --no "room number"
-  ぬける   --nuke "room number"
+  参加する --no 部屋番号（1つしか部屋がないときは省略可能）
+  ぬける   --nuke 部屋番号（1つの部屋にしか入ってないときは省略可能）
 
 その他
   部屋一覧 --rooms
