@@ -3,7 +3,7 @@ Python3.6.3インストーラーダウンロード
 https://repo.anaconda.com/archive/Anaconda3-5.0.1-Windows-x86_64.exe
 Anacondaはいろんなライブラリがバンドルされてる便利パッケージ
 
-インストーラ―では何も選択せず全部Next
+インストーラーでは何も選択せず全部Next
 最後はチェックを外してFinish
 
 C:\Users\<username>\Anaconda3\python.exeがあるのを確認
