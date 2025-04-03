@@ -36,8 +36,6 @@ import discord
 from discord.ext import commands
 import asyncio
 
-from pprint import pprint
-
 from app_token import TOKEN
 
 #TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
@@ -256,11 +254,6 @@ async def on_message(message):
     # bot自身の発言を拾わない
     if message.author.bot:
         return
-
-    #print(f"Received: {message.content}")
-    #print(f"message.author: {message.author}")
-    #pprint(dir(message.author))
-    #print(message.author.display_name, message.author.id, message.author.name, message.author.nick)
 
     # テストサーバー
     if message.channel.name == "general":
