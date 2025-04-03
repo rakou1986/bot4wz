@@ -128,7 +128,7 @@ def process_message(message):
                 room = None
                 for room_ in rooms:
                     if room_number == room_.number:
-                        if message.author.id == room.owner.id:
+                        if message.author.id == room_.owner.id:
                             room = room_
                             break
                 if room is None:
