@@ -255,16 +255,6 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # テストサーバー
-    if message.channel.name == "general":
-        for command in commands:
-            if command in message.content:
-                print(f"INPUT:\n{message.content}\n")
-                reply = process_message(message)
-                await message.channel.send(reply, allowed_mentions=allowed_mentions)
-                print(f"OUTPUT:\n{reply}\n")
-
-    # warzone
     if message.channel.name == "general（de）":
         for command in commands:
             if command in message.content:
