@@ -45,7 +45,7 @@ intents.messages = True
 allowed_mentions = discord.AllowedMentions(users=True)
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-commands = ["--yyk", "--bakuha", "--no", "--nuke", "--rooms", "--help"]
+commands = ["--yyk", "--bakuha", "--no", "--nuke", "--rooms", "--force-bakuha-tekumakumayakonn-tekumakumayakonn", "--help"]
 room_number_pool = list(range(1, 10000))
 rooms = []
 usage = """\
@@ -62,6 +62,7 @@ usage = """\
 
 その他
   部屋一覧 --rooms
+  無理矢理部屋を消す（干しっぱなし用、管理者使用推奨） --force-bakuha-tekumakumayakonn-tekumakumayakonn 部屋番号
   つかいかたを出す --help
 """
 
@@ -222,6 +223,22 @@ def process_message(message):
             reply = "\n".join(lines)
         else:
             reply = "現在、部屋はありません"
+
+    if message.content.startswith("--force-bakuha-tekumakumayakonn-tekumakumayakonn"):
+        room_number = to_int(message.content.split("--force-bakuha-tekumakumayakonn-tekumakumayakonn")[1])
+        if room_number is None:
+            reply = "部屋番号をアラビア数字で指定してね"
+        else:
+            room = None
+            for room_ in rooms:
+                if room_number == room_.number:
+                    room = room_
+                    break
+            if room is None:
+                reply = "その番号の部屋はありません"
+            else:
+                delete_room(room)
+                reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
 
     if message.content.startswith("--help"):
         reply = usage
