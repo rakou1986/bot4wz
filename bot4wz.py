@@ -38,6 +38,7 @@ from datetime import datetime, timedelta
 import os
 import pickle
 from pprint import pprint
+import time
 
 import discord
 from discord.ext import commands
@@ -413,7 +414,6 @@ async def on_message(message):
     # bot自身の発言を拾わない
     if message.author.bot:
         return
-
     if message.channel.name == "general（de）":
         for command in commands:
             if message.content.startswith(command):
@@ -427,7 +427,6 @@ async def on_message(message):
                 print(f"OUTPUT:\n{reply}\n")
                 print(rooms)
                 await save()
-
     await bot.process_commands(message)
 
 def main():
@@ -446,6 +445,7 @@ def main():
     finally:
         loop.close()
         print("bye")
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()
