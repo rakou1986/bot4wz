@@ -13,6 +13,7 @@ Version: 1.7.3
 [discord developer setting]
 Bot:
   MESSAGE CONTENT INTENT: enable
+  TOKEN: Press "Reset Token". Token appear once. Copy token and s/YOUR_DISCORD_APP_TOKEN_HERE/copied_token/ and save.
 
 OAuth2:
   SCOPES:
@@ -23,7 +24,7 @@ OAuth2:
     Read Message History
     Mention Everyone
 
-Copy and paste to warzone "GENERATED URL" at "OAuth2"
+  Copy and paste to warzone "GENERATED URL" at "OAuth2"
 
 [run]
 $ python bot4wz.py
