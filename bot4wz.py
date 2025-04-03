@@ -58,7 +58,7 @@ room_number_pool_file = "room_number_pool.bot4wz.pickle"
 rooms = []
 rooms_file = "rooms.bot4wz.pickle"
 guild_id = 390895191659118594 # warzone-aoe サーバーID
-guild_id = 414119071408193536 # テストサーバー
+#guild_id = 414119071408193536 # テストサーバー
 
 usage = """\
 つかいかた:
@@ -222,6 +222,8 @@ async def process_message(message):
                         reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
                     else:
                         reply = "もう入ってるよ"
+                elif len(rooms) == 0:
+                    reply = "現在、部屋はありません"
                 else:
                     reply = "複数の部屋があるときは部屋番号を指定してね"
             else:
