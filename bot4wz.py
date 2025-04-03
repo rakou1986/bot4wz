@@ -33,13 +33,14 @@ $ python bot4wz.py
 Ctrl + C
 """
 
-import discord
-from discord.ext import commands
 import asyncio
-
+from datetime import datetime, timedelta
 import os
 import pickle
 from pprint import pprint
+
+import discord
+from discord.ext import commands
 
 from app_token import TOKEN
 
@@ -57,6 +58,10 @@ room_number_pool = list(range(1, 100))
 room_number_pool_file = "room_number_pool.bot4wz.pickle"
 rooms = []
 rooms_file = "rooms.bot4wz.pickle"
+temp_message_ids = []
+temp_message_ids_file = "temp_message_ids.bot4wz.pickle"
+last_process_message_timestamp = datetime.utcnow()
+
 guild_id = 390895191659118594 # warzone-aoe サーバーID
 #guild_id = 414119071408193536 # テストサーバー
 
@@ -131,6 +136,8 @@ async def save():
         pickle.dump(rooms_picklable, f)
     with open(room_number_pool_file, "wb") as f:
         pickle.dump(room_number_pool, f)
+    with open(temp_message_ids_file, "wb") as f:
+        pickle.dump(temp_message_ids, f)
 
 async def load(bot):
     global rooms
@@ -141,12 +148,18 @@ async def load(bot):
                 rooms = await asyncio.gather(*(picklable.to_room(bot) for picklable in rooms_picklable))
             except Exception as e:
                 print(f"Error loading rooms: {e}")
-
     global room_number_pool
     if os.path.exists(room_number_pool_file):
         with open(room_number_pool_file, "rb") as f:
             try:
                 room_number_pool = pickle.load(f)
+            except Exception as e:
+                pass
+    global temp_message_ids
+    if os.path.exists(temp_message_ids_file):
+        with open(temp_message_ids_file, "rb") as f:
+            try:
+                temp_message_ids = pickle.load(f)
             except Exception as e:
                 pass
 
@@ -172,6 +185,7 @@ async def process_message(message):
     async with lock:
         reply = "初期値。問題が起きているのでrakouに連絡"
         room_to_clean = None
+        temp_message = False
         if message.content.startswith("--yyk"):
             capacity = 8
             name = message.content.split("--yyk")[1]
@@ -200,10 +214,12 @@ async def process_message(message):
                     room_to_clean = room
                 else:
                     reply = "複数の部屋を建てたときは部屋番号を指定してね"
+                    temp_message = True
             else:
                 room_number = to_int(room_number)
                 if room_number is None:
                     reply = "部屋番号をアラビア数字で指定してね"
+                    temp_message = True
                 else:
                     room = None
                     for room_ in rooms:
@@ -213,6 +229,7 @@ async def process_message(message):
                                 break
                     if room is None:
                         reply = "その番号の部屋がないか、ホストではないため爆破できません"
+                        temp_message = True
                     else:
                         delete_room(room)
                         reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
@@ -230,14 +247,18 @@ async def process_message(message):
                         room_to_clean = room
                     else:
                         reply = "もう入ってるよ"
+                        temp_message = True
                 elif len(rooms) == 0:
                     reply = "現在、部屋はありません"
+                    temp_message = True
                 else:
                     reply = "複数の部屋があるときは部屋番号を指定してね"
+                    temp_message = True
             else:
                 room_number = to_int(room_number)
                 if room_number is None:
                     reply = "部屋番号をアラビア数字で指定してね"
+                    temp_message = True
                 else:
                     room = None
                     for room_ in rooms:
@@ -246,6 +267,7 @@ async def process_message(message):
                             break
                     if room is None:
                         reply = "その番号の部屋はありません"
+                        temp_message = True
                     else:
                         if not message.author in room.members:
                             room.members.append(message.author)
@@ -253,6 +275,7 @@ async def process_message(message):
                             room_to_clean = room
                         else:
                             reply = "もう入ってるよ"
+                            temp_message = True
             if room is not None:
                 if len(room.members) == room.capacity:
                     reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
@@ -272,18 +295,22 @@ async def process_message(message):
                     room = entered_rooms[0]
                     if room.owner == message.author:
                         reply = "ホストが抜けるときは--bakuhaを使ってね"
+                        temp_message = True
                     else:
                         room.members.pop(room.members.index(message.author))
                         reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
                         room_to_clean = room
                 elif len(entered_rooms) == 0:
                     reply = "どこにも入ってないよ"
+                    temp_message = True
                 else:
                     reply = "複数の部屋に入っているときは部屋番号を指定してね"
+                    temp_message = True
             else:
                 room_number = to_int(room_number)
                 if room_number is None:
                     reply = "部屋番号をアラビア数字で指定してね"
+                    temp_message = True
                 else:
                     room = None
                     for room_ in rooms:
@@ -295,9 +322,11 @@ async def process_message(message):
                             break
                     if room is None:
                         reply = "その番号の部屋がないか、入っていないので抜けれません"
+                        temp_message = True
                     else:
                         if room.owner == message.author:
                             reply = "ホストが抜けるときは--bakuhaを使ってね"
+                            temp_message = True
                         else:
                             room.members.pop(room.members.index(message.author))
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
@@ -311,11 +340,13 @@ async def process_message(message):
                 reply = "\n".join(lines)
             else:
                 reply = "現在、部屋はありません"
+            temp_message = True
 
         if message.content.startswith("--force-bakuha-tekumakumayakonn-tekumakumayakonn"):
             room_number = to_int(message.content.split("--force-bakuha-tekumakumayakonn-tekumakumayakonn")[1])
             if room_number is None:
                 reply = "部屋番号をアラビア数字で指定してね"
+                temp_message = True
             else:
                 room = None
                 for room_ in rooms:
@@ -324,6 +355,7 @@ async def process_message(message):
                         break
                 if room is None:
                     reply = "その番号の部屋はありません"
+                    temp_message = True
                 else:
                     delete_room(room)
                     reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
@@ -331,8 +363,12 @@ async def process_message(message):
 
         if message.content.startswith("--help"):
             reply = usage
+            temp_message = True
 
-        return reply, room_to_clean
+        global last_process_message_timestamp
+        last_process_message_timestamp = datetime.utcnow()
+
+        return reply, room_to_clean, temp_message
 
 async def room_cleaner(room, received_message, sent_message):
     room.garbage_queue.append(sent_message.id)
@@ -347,6 +383,22 @@ async def room_cleaner(room, received_message, sent_message):
         else:
             break
 
+async def temp_message_cleaner():
+    global last_process_message_timestamp
+    await bot.wait_until_ready()
+    await asyncio.sleep(120)
+    while True:
+        await asyncio.sleep(3)
+        if timedelta(minutes=2) <= datetime.utcnow() - last_process_message_timestamp:
+            for channel_id, message_id in temp_message_ids:
+                channel = bot.get_channel(channel_id)
+                if channel:
+                    try:
+                        msg = await channel.fetch_message(message_id)
+                        await msg.delete()
+                    except discord.NotFound:
+                        pass
+            temp_message_ids.clear()
 
 @bot.event
 async def on_ready():
@@ -366,10 +418,12 @@ async def on_message(message):
         for command in commands:
             if message.content.startswith(command):
                 print(f"INPUT:\n{message.content}\n")
-                reply, room_to_clean = await process_message(message)
+                reply, room_to_clean, temp_message = await process_message(message)
                 sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
                 if room_to_clean:
                     await room_cleaner(room_to_clean, message, sent_message)
+                if temp_message:
+                    temp_message_ids.append( (message.channel.id, sent_message.id) )
                 print(f"OUTPUT:\n{reply}\n")
                 print(rooms)
                 await save()
@@ -378,13 +432,20 @@ async def on_message(message):
 
 def main():
     loop = asyncio.get_event_loop()
+    temp_message_cleaner_task = loop.create_task(temp_message_cleaner())
     try:
         loop.run_until_complete(bot.start(TOKEN))
     except KeyboardInterrupt:
-        print("bye")
+        print("shutting down...")
+        temp_message_cleaner_task.cancel()
+        try:
+            loop.run_until_complete(temp_message_cleaner_task)
+        except asyncio.CancelledError:
+            pass
         loop.run_until_complete(bot.close())
     finally:
         loop.close()
+        print("bye")
 
 if __name__ == "__main__":
     main()
