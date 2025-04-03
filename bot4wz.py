@@ -38,7 +38,9 @@ import asyncio
 
 from pprint import pprint
 
-TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
+from app_token import TOKEN
+
+#TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
 
 intents = discord.Intents.default()
 intents.messages = True
