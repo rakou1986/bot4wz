@@ -39,6 +39,8 @@ import os
 import pickle
 from pprint import pprint
 import time
+import win32gui
+import win32con
 
 import discord
 from discord.ext import commands
@@ -429,7 +431,16 @@ async def on_message(message):
                 await save()
     await bot.process_commands(message)
 
+def disable_close_button():
+    # うっかり閉じるボタンで終了しないように、閉じるボタンを無効化する
+    hwnd = win32gui.GetForegroundWindow()
+    if hwnd:
+        menu = win32gui.GetSystemMenu(hwnd, False)
+        win32gui.RemoveMenu(menu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+        win32gui.DrawMenuBar(hwnd)
+
 def main():
+    disable_close_button()
     loop = asyncio.get_event_loop()
     temp_message_cleaner_task = loop.create_task(temp_message_cleaner())
     try:
@@ -445,6 +456,7 @@ def main():
     finally:
         loop.close()
         print("bye")
+        print("閉じるにはタスクバーで右クリック > ウインドウを閉じる")
         time.sleep(5)
 
 if __name__ == "__main__":
