@@ -478,7 +478,11 @@ def disable_close_button():
     hwnd = win32gui.GetForegroundWindow()
     if hwnd:
         menu = win32gui.GetSystemMenu(hwnd, False)
-        win32gui.RemoveMenu(menu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+        try:
+            win32gui.RemoveMenu(menu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+        except Exception:
+            # シェルで2回目に実行するとボタンがないので例外が出る
+            pass
         win32gui.DrawMenuBar(hwnd)
 
 def check_already_running():
