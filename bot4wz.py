@@ -38,7 +38,9 @@ from datetime import datetime, timedelta
 import os
 import pickle
 from pprint import pprint
+import psutil
 import time
+import sys
 import win32gui
 import win32con
 
@@ -439,7 +441,23 @@ def disable_close_button():
         win32gui.RemoveMenu(menu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
         win32gui.DrawMenuBar(hwnd)
 
+def check_already_running():
+    # うっかりbotを重複起動しちゃうのを防止
+    current_pid = psutil.Process().pid
+    for proc in psutil.process_iter(attrs=["pid", "cmdline"]):
+        try:
+            cmdline = " ".join(proc.info["cmdline"])
+            if "bot4wz.py" in cmdline and proc.info["pid"] != current_pid and not "cmd" in proc.info["cmdline"]:
+                print(proc.info["cmdline"])
+                print("すでに実行中の bot4wz.py があるのでbot.start()せずに終了します")
+                sys.exit(0)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+        except TypeError:
+            pass
+
 def main():
+    check_already_running()
     disable_close_button()
     loop = asyncio.get_event_loop()
     temp_message_cleaner_task = loop.create_task(temp_message_cleaner())
