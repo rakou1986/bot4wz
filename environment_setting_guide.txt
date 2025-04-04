@@ -24,11 +24,12 @@ python -m discord --version
 - discord.py v1.7.3-final
 を確認
 
-bot4wz.py, app_token.pyを同じフォルダに置く
-cd そのフォルダ
-python bot4wz.py
+bot4wz.py, app_token.py, run.batを同じフォルダに置く
+run.batをダブルクリックで起動
 
+うっかり閉じるボタンを押すと困るので、閉じるボタンがないウインドウが開く
 必ず Ctrl + C で終了（しばらく待つ）
+タスクバーで右クリック→ウインドウを閉じる、で閉じる
 
 botが1回応答するとそのフォルダに
 room_number_pool.bot4wz.pickle
