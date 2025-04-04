@@ -1,6 +1,8 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3 bot4wz.py
 
+_debug = True
+
 """
 [requirements]
 
@@ -40,6 +42,7 @@ import pickle
 from pprint import pprint
 import psutil
 import time
+import socket
 import sys
 import win32gui
 import win32con
@@ -47,11 +50,21 @@ import win32con
 import discord
 from discord.ext import commands
 
-from app_token import TOKEN
+from key_store import status_channel_id
+if _debug:
+    from key_store import canary_bot_token as TOKEN
+    from key_store import canary_bot_id as bot_id
+    from key_store import canary_bot_server_id as guild_id
+else:
+    from key_store import available_bot_token as TOKEN
+    from key_store import available_bot_id as bot_id
+    from key_store import available_bot_server_id as guild_id
+
 
 #TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
 
 lock = asyncio.Lock()
+on_ready_complete = asyncio.Event()
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -66,9 +79,6 @@ rooms_file = "rooms.bot4wz.pickle"
 temp_message_ids = []
 temp_message_ids_file = "temp_message_ids.bot4wz.pickle"
 last_process_message_timestamp = datetime.utcnow()
-
-guild_id = 390895191659118594 # warzone-aoe サーバーID
-#guild_id = 414119071408193536 # テストサーバー
 
 usage = """\
 つかいかた:
@@ -389,6 +399,9 @@ async def room_cleaner(room, received_message, sent_message):
             break
 
 async def temp_message_cleaner():
+    if not on_ready_complete.is_set():
+        on_ready_complete.wait()
+    await asyncio.sleep(5)
     global last_process_message_timestamp
     await bot.wait_until_ready()
     await asyncio.sleep(120)
@@ -405,16 +418,43 @@ async def temp_message_cleaner():
                         pass
             temp_message_ids.clear()
 
+async def report_survive():
+    if not on_ready_complete.is_set():
+        on_ready_complete.wait()
+    await asyncio.sleep(5)
+    while True:
+        channel = bot.get_channel(status_channel_id)
+        if channel:
+            hostname = socket.gethostname()
+            await channel.send(f"{bot_id} running on {hostname}")
+        await asyncio.sleep(300)
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+
+    # check_already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
+    channel = bot.get_channel(status_channel_id)
+    messages = await channel.history(limit=1).flatten()
+    if messages:
+        message = messages[0]
+        if message.content.startswith(f"{bot_id} running"):
+            delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
+            if delta.total_seconds() < 900:
+                print("Another instance likely running. Do nothing.")
+                await bot.close()
+                return
 
     print("Loading")
     await load(bot)
     print("Loaded, now starting other tasks")
 
+    on_ready_complete.set()
+
 @bot.event
 async def on_message(message):
+    if not on_ready_complete.is_set():
+        await on_ready_complete.wait()
     # bot自身の発言を拾わない
     if message.author.bot:
         return
@@ -460,18 +500,22 @@ def main():
     check_already_running()
     disable_close_button()
     loop = asyncio.get_event_loop()
-    temp_message_cleaner_task = loop.create_task(temp_message_cleaner())
+    tasks = []
+    tasks.append(loop.create_task(temp_message_cleaner()))
+    tasks.append(loop.create_task(report_survive()))
     try:
         loop.run_until_complete(bot.start(TOKEN))
     except KeyboardInterrupt:
         print("shutting down...")
-        temp_message_cleaner_task.cancel()
-        try:
-            loop.run_until_complete(temp_message_cleaner_task)
-        except asyncio.CancelledError:
-            pass
-        loop.run_until_complete(bot.close())
     finally:
+        for task in tasks:
+            task.cancel()
+            try:
+                loop.run_until_complete(task)
+            except asyncio.CancelledError:
+                pass
+        if not bot.is_closed():
+            loop.run_until_complete(bot.close())
         loop.close()
         print("bye")
         print("閉じるにはタスクバーで右クリック > ウインドウを閉じる")
