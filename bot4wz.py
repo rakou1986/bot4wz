@@ -50,18 +50,21 @@ import win32con
 import discord
 from discord.ext import commands
 
-from key_store import status_channel_id
 if _debug:
+    from key_store import canary_bot_status_channel_id as status_channel_id
     from key_store import canary_bot_token as TOKEN
     from key_store import canary_bot_id as bot_id
     from key_store import canary_bot_server_id as guild_id
 else:
+    from key_store import available_bot_status_channel_id as status_channel_id
     from key_store import available_bot_token as TOKEN
     from key_store import available_bot_id as bot_id
     from key_store import available_bot_server_id as guild_id
 
-
-#TOKEN = "YOUR_DISCORD_APP_TOKEN_HERE"
+if os.path.exists("token.txt"):
+    with open("token.txt") as f:
+        TOKEN = f.read()
+        print("token.txt loaded.")
 
 lock = asyncio.Lock()
 on_ready_complete = asyncio.Event()
