@@ -507,6 +507,7 @@ def main():
     tasks = []
     tasks.append(loop.create_task(temp_message_cleaner()))
     tasks.append(loop.create_task(report_survive()))
+    asyncio.gather(*tasks, return_exceptions=True) # ssl.SSLErrorの出所を探るため、例外がタスクから来た場合に Ctrl+C を押すまで保留する
     try:
         loop.run_until_complete(bot.start(TOKEN))
     except KeyboardInterrupt:
