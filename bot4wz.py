@@ -71,7 +71,7 @@ intents.messages = True
 allowed_mentions = discord.AllowedMentions(users=True)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-commands = ["--yyk", "--bakuha", "--no", "--nuke", "--rooms", "--force-bakuha-tekumakumayakonn-tekumakumayakonn", "--help"]
+bot_commands = ["--yyk", "--bakuha", "--no", "--nuke", "--rooms", "--force-bakuha-tekumakumayakonn-tekumakumayakonn", "--help"]
 room_number_pool = list(range(1, 100))
 room_number_pool_file = "room_number_pool.bot4wz.pickle"
 rooms = []
@@ -459,7 +459,7 @@ async def on_message(message):
     if message.author.bot:
         return
     if message.channel.name == "general（de）":
-        for command in commands:
+        for command in bot_commands:
             if message.content.startswith(command):
                 print(f"INPUT:\n{message.content}\n")
                 reply, room_to_clean, temp_message = await process_message(message)
