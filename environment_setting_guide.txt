@@ -1,9 +1,4 @@
 ```
-bot4wz.exeを実行
-（作成手順 pip install pyinstaller; pyinstaller --onefile bot4wz.py）
-
-または
-
 Python3.6.3インストーラーダウンロード
 https://repo.anaconda.com/archive/Anaconda3-5.0.1-Windows-x86_64.exe
 Anacondaはいろんなライブラリがバンドルされてる便利パッケージ
@@ -41,4 +36,9 @@ room_number_pool.bot4wz.pickle
 rooms.bot4wz.pickle
 temp_message_ids.bot4wz.pickle
 というファイルが作られる。なくさない。触らない。
+
+
+bot4wz.exeの作り方
+pip install pyinstaller
+pyinstaller --onefile bot4wz.py
 ```
