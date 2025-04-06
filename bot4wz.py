@@ -204,6 +204,7 @@ async def process_message(message):
         reply = "初期値。問題が起きているのでrakouに連絡"
         room_to_clean = None
         temp_message = False
+        yyk_complete = False
         if message.content.startswith("--yyk"):
             capacity = 8
             name = message.content.split("--yyk")[1]
@@ -214,6 +215,7 @@ async def process_message(message):
             name = "無制限" if not name else name.strip()
             room = Room(author=message.author, name=name, capacity=capacity)
             rooms.append(room)
+            yyk_complete = True
             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
             room_to_clean = room
             rooms.sort(key=lambda room: room.number)
@@ -386,7 +388,7 @@ async def process_message(message):
         global last_process_message_timestamp
         last_process_message_timestamp = datetime.utcnow()
 
-        return reply, room_to_clean, temp_message
+        return reply, room_to_clean, temp_message, yyk_complete
 
 async def room_cleaner(room, received_message, sent_message):
     room.garbage_queue.append(sent_message.id)
@@ -465,11 +467,18 @@ async def on_message(message):
         for command in bot_commands:
             if message.content.startswith(command):
                 print(f"INPUT:\n{message.content}\n")
-                reply, room_to_clean, temp_message = await process_message(message)
+                reply, room_to_clean, temp_message, yyk_complete = await process_message(message)
                 sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
                 if room_to_clean:
                     await room_cleaner(room_to_clean, message, sent_message)
                 if temp_message:
+                    temp_message_ids.append( (message.channel.id, sent_message.id) )
+                if yyk_complete:
+                    lines = ["=========== 部屋一覧 ===========\n"]
+                    for room in rooms:
+                        lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
+                    line = "\n".join(lines)
+                    sent_message = await message.channel.send(line, allowed_mentions=allowed_mentions)
                     temp_message_ids.append( (message.channel.id, sent_message.id) )
                 print(f"OUTPUT:\n{reply}\n")
                 print(rooms)
