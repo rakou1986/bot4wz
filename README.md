@@ -19,7 +19,7 @@
 実行してくれる人向け:
 
 botの実行にはトークンが必要です。
-warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、rakouがいない場合はDiscord Developer Portalでアプリケーションを作成し、warzone-aoeで認証しなければなりません。
+warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、rakouがいない場合はDiscord Developer Portalでアプリケーションを作成し、warzone-aoeで認証し、有効なトークンをセットしなければなりません。
 
 2025/04現在の手順
   ブラウザ版Discordにログイン
@@ -43,8 +43,10 @@ warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、r
   TOKEN > Reset Token を押すたびに1度だけ出てくる Token をコピーして、token.txt という名前で bot4wz.exe と同じフォルダに保存する。
   ファイル名は token.txt でなければなりません。
 
+  【注意】さらにReset Tokenを押すと、過去のトークンが無効になります。トークンは常に最新の1つだけが有効です。
+  もしReset Tokenを押してしまったら、token.txt を削除して、新しいトークンを token.txt に保存してください。
+
 手順を実行したらこのウインドウを閉じて、再度bot4wz.exeを起動すればbotが起動します。
 
 botを起動後、botが1回応答すると、3つの.pickleファイルが作られます。これらを触らないようにしてください。
-
 ```
