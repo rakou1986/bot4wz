@@ -16,34 +16,35 @@
   つかいかたを出す --help
 
 
-デプロイしてくれる人向け:
-[requirements]
+実行してくれる人向け:
 
-python -V
-Python 3.6.3 :: Anaconda, Inc.
+botの実行にはトークンが必要です。
+warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、rakouがいない場合はDiscord Developer Portalでアプリケーションを作成し、warzone-aoeで認証しなければなりません。
 
-pip show discord
-Version: 1.7.3
+2025/04現在の手順
+  ブラウザ版Discordにログイン
+  https://discord.com/developers/docs/intro を開く
+  Applications > New Application > rakou_botなどと入力 > Create
 
-[discord developer setting]
-Bot:
-  MESSAGE CONTENT INTENT: enable
-  TOKEN: Press "Reset Token". Token appear once. Copy token and s/YOUR_DISCORD_APP_TOKEN_HERE/copied_token/ and save.
+  SETTINGS > OAuth2 > OAuth2 URL Generator > bot をチェック
+  下に出てくる BOT PERMISSIONSで以下をチェック
+    - Send Messages
+    - Manage Messages
+    - Read Message History
+    - Mention Everyone
 
-OAuth2:
-  SCOPES:
-    bot
-  BOT PERMISIOONS:
-    Send Messages
-    Manage Messages
-    Read Message History
-    Mention Everyone
+  一番下に出てくるGENERATED URLをCopyしてwarzone-aoeのテキストに貼り付け
 
-  Copy and paste to warzone "GENERATED URL" at "OAuth2"
+  @rate_counseler（名前が黄色い人）を呼んで、貼り付けたURLを押してもらって、botを認証してもらう。
 
-[run]
-$ python bot4wz.py
+  【注意】botを使用するテキストチャンネル名は general（de） でなければなりません！（カッコは全角）
 
-[quit]
-Ctrl + C
+  Dicord Developerの画面に戻り、 SETTINGS > Bot を開く
+  TOKEN > Reset Token を押すたびに1度だけ出てくる Token をコピーして、token.txt という名前で bot4wz.exe と同じフォルダに保存する。
+  ファイル名は token.txt でなければなりません。
+
+手順を実行したらこのウインドウを閉じて、再度bot4wz.exeを起動すればbotが起動します。
+
+botを起動後、botが1回応答すると、3つの.pickleファイルが作られます。これらを触らないようにしてください。
+
 ```
