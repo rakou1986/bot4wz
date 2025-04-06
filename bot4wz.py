@@ -70,7 +70,7 @@ if os.path.exists(token_file):
 if TOKEN is None:
     print("""\
 botの実行にはトークンが必要です。
-warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、rakouがいない場合はDiscord Developer Portalでアプリケーションを作成し、warzone-aoeで認証しなければなりません。
+warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、rakouがいない場合はDiscord Developer Portalでアプリケーションを作成し、warzone-aoeで認証し、有効なトークンをセットしなければなりません。
 
 2025/04現在の手順
   ブラウザ版Discordにログイン
@@ -95,7 +95,7 @@ warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、r
   ファイル名は token.txt でなければなりません。
 
   【注意】さらにReset Tokenを押すと、過去のトークンが無効になります。トークンは常に最新の1つだけが有効です。
-  もしReset Tokenを押してしまったら、新しいトークンを token.txt に保存してください。
+  もしReset Tokenを押してしまったら、token.txt を削除して、新しいトークンを token.txt に保存してください。
 
 手順を実行したらこのウインドウを閉じて、再度bot4wz.exeを起動すればbotが起動します。
 
