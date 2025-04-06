@@ -490,7 +490,9 @@ def disable_close_button():
 
 def already_running():
     # うっかりbotを重複起動しちゃうのを防止
-    current_pid = psutil.Process().pid
+    current = psutil.Process()
+    current_pid = current.pid
+    parent_pid = current.ppid()
     for proc in psutil.process_iter(attrs=["pid", "cmdline"]):
         try:
             cmdline = " ".join(proc.info["cmdline"])
@@ -502,10 +504,14 @@ def already_running():
             pass
     for proc in psutil.process_iter(attrs=["pid", "exe"]):
         try:
-            if proc.info["pid"] == current_pid:
+            if proc.pid in (current_pid, parent_pid):
                 continue
             proc_exe = proc.info["exe"]
-            if proc_exe and "bot4wz.exe" == os.path.basename(proc_exe):
+            if not proc_exe:
+                continue
+            if "bot4wz.exe" == os.path.basename(proc_exe):
+                return True
+            if "bot4wz.exe" == proc.name().lower():
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
@@ -538,6 +544,7 @@ def main():
 
 if __name__ == "__main__":
     if already_running():
-        print("すでに実行中の bot4wz.py または bot4wz.exe があるのでbot.start()せずに終了します")
+        print("すでに実行中の bot4wz.py または bot4wz.exe があるので bot を開始せずに終了します")
+        time.sleep(10)
         sys.exit(0)
     main()
