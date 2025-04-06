@@ -50,20 +50,22 @@ import discord
 from discord.ext import commands
 
 if _debug:
+    token_file = "canary_token.txt"
     from key_store import canary_bot_status_channel_id as status_channel_id
     from key_store import canary_bot_token as TOKEN
     from key_store import canary_bot_id as bot_id
     from key_store import canary_bot_server_id as guild_id
 else:
+    token_file = "token.txt"
     from key_store import available_bot_status_channel_id as status_channel_id
     from key_store import available_bot_token as TOKEN
     from key_store import available_bot_id as bot_id
     from key_store import available_bot_server_id as guild_id
 
-if os.path.exists("token.txt"):
-    with open("token.txt") as f:
+if os.path.exists(token_file):
+    with open(token_file) as f:
         TOKEN = f.read()
-        print("token.txtを読み取りました。")
+        print(f"{token_file}を読み取りました。")
 
 lock = asyncio.Lock()
 on_ready_complete = asyncio.Event()
