@@ -1,5 +1,7 @@
 ﻿*.exe
 token.txt
+canary_token.txt
+key_store.py.backup
 key_store.py
 *.pickle
 build/
