@@ -539,7 +539,6 @@ def main():
             loop.run_until_complete(bot.close())
         loop.close()
         print("bye")
-        print("閉じるにはタスクバーで右クリック > ウインドウを閉じる")
         time.sleep(5)
 
 if __name__ == "__main__":
