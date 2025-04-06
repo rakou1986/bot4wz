@@ -488,23 +488,30 @@ def disable_close_button():
             pass
         win32gui.DrawMenuBar(hwnd)
 
-def check_already_running():
+def already_running():
     # うっかりbotを重複起動しちゃうのを防止
     current_pid = psutil.Process().pid
     for proc in psutil.process_iter(attrs=["pid", "cmdline"]):
         try:
             cmdline = " ".join(proc.info["cmdline"])
             if "bot4wz.py" in cmdline and proc.info["pid"] != current_pid and not "cmd" in proc.info["cmdline"]:
-                print(proc.info["cmdline"])
-                print("すでに実行中の bot4wz.py があるのでbot.start()せずに終了します")
-                sys.exit(0)
+                return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
         except TypeError:
             pass
+    for proc in psutil.process_iter(attrs=["pid", "exe"]):
+        try:
+            if proc.info["pid"] == current_pid:
+                continue
+            proc_exe = proc.info["exe"]
+            if proc_exe and "bot4wz.exe" == os.path.basename(proc_exe):
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    return False
 
 def main():
-    check_already_running()
     disable_close_button()
     loop = asyncio.get_event_loop()
     tasks = []
@@ -530,4 +537,7 @@ def main():
         time.sleep(5)
 
 if __name__ == "__main__":
+    if already_running():
+        print("すでに実行中の bot4wz.py または bot4wz.exe があるのでbot.start()せずに終了します")
+        sys.exit(0)
     main()
