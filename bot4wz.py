@@ -443,7 +443,7 @@ async def on_ready():
         if message.content.startswith(f"{bot_id} running"):
             delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
             if delta.total_seconds() < 900:
-                print("実行中であることをbot自身が報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
+                print("botが実行中であることをbot自身がステータスチャンネルに報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
                 await bot.close()
                 return
 
