@@ -444,6 +444,7 @@ async def on_ready():
             delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
             if delta.total_seconds() < 900:
                 print("botが実行中であることをbot自身がステータスチャンネルに報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
+                time.sleep(10)
                 await bot.close()
                 return
 
@@ -451,7 +452,9 @@ async def on_ready():
     await load(bot)
     print("読み取り完了。botを実行します。")
     print(f"{bot.user}でDicordにログインしました。")
-    print("終了するには必ずこのウインドウでCtrl+Cを押してください。実行中にWindowsを終了したり、タスクバーからウインドウを閉じたり、タスクマネージャから終了しないでください。")
+    print("終了するには必ずこのウインドウでCtrl+Cを押してください。")
+    print("ほとんどの場合、すぐにはCtrl+Cに反応しません。しばらくお待ちください。")
+    print("実行中にWindowsを終了したり、タスクバーからウインドウを閉じたり、タスクマネージャから終了しないでください。")
     print("部屋の状態などを保存するための.pickleファイルがいくつか作られますが、触らないでください。")
 
     on_ready_complete.set()
