@@ -94,6 +94,9 @@ warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、r
   TOKEN > Reset Token を押すたびに1度だけ出てくる Token をコピーして、token.txt という名前で bot4wz.exe と同じフォルダに保存する。
   ファイル名は token.txt でなければなりません。
 
+  【注意】さらにReset Tokenを押すと、過去のトークンが無効になります。トークンは常に最新の1つだけが有効です。
+  もしReset Tokenを押してしまったら、新しいトークンを token.txt に保存してください。
+
 手順を実行したらこのウインドウを閉じて、再度bot4wz.exeを起動すればbotが起動します。
 
 botを起動後、botが1回応答すると、3つの.pickleファイルが作られます。これらを触らないようにしてください。
