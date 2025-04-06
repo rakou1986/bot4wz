@@ -39,11 +39,10 @@ import asyncio
 from datetime import datetime, timedelta
 import os
 import pickle
-from pprint import pprint
 import psutil
-import time
 import socket
 import sys
+import time
 import win32gui
 import win32con
 
@@ -64,7 +63,7 @@ else:
 if os.path.exists("token.txt"):
     with open("token.txt") as f:
         TOKEN = f.read()
-        print("token.txt loaded.")
+        print("token.txtを読み取りました。")
 
 lock = asyncio.Lock()
 on_ready_complete = asyncio.Event()
@@ -165,7 +164,7 @@ async def load(bot):
                 rooms_picklable = pickle.load(f)
                 rooms = await asyncio.gather(*(picklable.to_room(bot) for picklable in rooms_picklable))
             except Exception as e:
-                print(f"Error loading rooms: {e}")
+                pass
     global room_number_pool
     if os.path.exists(room_number_pool_file):
         with open(room_number_pool_file, "rb") as f:
@@ -436,8 +435,6 @@ async def report_survive():
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
-
     # check_already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
     channel = bot.get_channel(status_channel_id)
     messages = await channel.history(limit=1).flatten()
@@ -446,13 +443,16 @@ async def on_ready():
         if message.content.startswith(f"{bot_id} running"):
             delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
             if delta.total_seconds() < 900:
-                print("Another instance likely running. Do nothing.")
+                print("実行中であることをbot自身が報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
                 await bot.close()
                 return
 
-    print("Loading")
+    print("前回の状態を読み取り中。")
     await load(bot)
-    print("Loaded, now starting other tasks")
+    print("読み取り完了。botを実行します。")
+    print(f"{bot.user}でDicordにログインしました。")
+    print("終了するには必ずこのウインドウでCtrl+Cを押してください。実行中にWindowsを終了したり、タスクバーからウインドウを閉じたり、タスクマネージャから終了しないでください。")
+    print("部屋の状態などを保存するための.pickleファイルがいくつか作られますが、触らないでください。")
 
     on_ready_complete.set()
 
@@ -466,7 +466,8 @@ async def on_message(message):
     if message.channel.name == "general（de）":
         for command in bot_commands:
             if message.content.startswith(command):
-                print(f"INPUT:\n{message.content}\n")
+                now = datetime.utcnow()
+                print(f"INPUT:\n{message.content}\n{now}\n")
                 reply, room_to_clean, temp_message, yyk_complete = await process_message(message)
                 sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
                 if room_to_clean:
@@ -480,8 +481,7 @@ async def on_message(message):
                     line = "\n".join(lines)
                     sent_message = await message.channel.send(line, allowed_mentions=allowed_mentions)
                     temp_message_ids.append( (message.channel.id, sent_message.id) )
-                print(f"OUTPUT:\n{reply}\n")
-                print(rooms)
+                print(f"OUTPUT:\n{reply}\n{now}\n")
                 await save()
     await bot.process_commands(message)
 
@@ -536,7 +536,7 @@ def main():
     try:
         loop.run_until_complete(bot.start(TOKEN))
     except KeyboardInterrupt:
-        print("shutting down...")
+        print("終了命令Ctrl+Cを受け付けました。非同期タスクの終了を待っています…")
     finally:
         for task in tasks:
             task.cancel()
@@ -547,12 +547,12 @@ def main():
         if not bot.is_closed():
             loop.run_until_complete(bot.close())
         loop.close()
-        print("bye")
-        time.sleep(5)
+        print("10秒後に終了します。")
+        time.sleep(10)
 
 if __name__ == "__main__":
     if already_running():
-        print("すでに実行中の bot4wz.py または bot4wz.exe があるので bot を開始せずに終了します")
+        print("すでに実行中のbot4wz.pyまたはbot4wz.exeがあるのでbotを開始せず10秒後に終了します")
         time.sleep(10)
         sys.exit(0)
     main()
