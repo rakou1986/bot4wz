@@ -1,4 +1,9 @@
 ```
+bot4wz.exeを実行
+（作成手順 pip install pyinstaller; pyinstaller --onefile bot4wz.py）
+
+または
+
 Python3.6.3インストーラーダウンロード
 https://repo.anaconda.com/archive/Anaconda3-5.0.1-Windows-x86_64.exe
 Anacondaはいろんなライブラリがバンドルされてる便利パッケージ
