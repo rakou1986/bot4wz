@@ -40,6 +40,7 @@ from datetime import datetime, timedelta
 import os
 import pickle
 import psutil
+import random
 import socket
 import sys
 import time
@@ -120,6 +121,7 @@ bot_commands = [
     "--nuke", "--out", "--leave", "--dismiss",
     "--rooms",
     "--force-bakuha-tekumakumayakonn-tekumakumayakonn",
+    "--remember-takaomikawahashi",
     "--help"
     ]
 room_number_pool = list(range(1, 100))
@@ -473,6 +475,18 @@ async def process_message(message):
 
         if message.content.startswith("--help"):
             reply = usage
+            temp_message = True
+
+        if message.content.startswith("--remember-takaomikawahashi"):
+            reply = random.choice([
+                "学びっすね",
+                "マジ破壊されたわ",
+                "これがインプルーブ",
+                "ソーリー、マイバ、あぁ。",
+                "GG! BOYZ!!",
+                "えっガラさん1v1するんすか？見ものっすね",
+                "まどうさん偏差値なんぼっすか？",
+                ]
             temp_message = True
 
         global last_process_message_timestamp
