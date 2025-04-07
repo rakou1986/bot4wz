@@ -582,6 +582,7 @@ async def on_message(message):
                     line = "\n".join(lines)
                     sent_message = await message.channel.send(line, allowed_mentions=allowed_mentions)
                     temp_message_ids.append( (message.channel.id, sent_message.id) )
+                jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"OUTPUT:\n{reply}\n{jst}\n")
                 await save()
     await bot.process_commands(message)
