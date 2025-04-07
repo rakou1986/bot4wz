@@ -113,7 +113,15 @@ intents.messages = True
 allowed_mentions = discord.AllowedMentions(users=True)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-bot_commands = ["--yyk", "--bakuha", "--no", "--nuke", "--rooms", "--force-bakuha-tekumakumayakonn-tekumakumayakonn", "--help"]
+bot_commands = [
+    "--yyk", "--call", "--create", "--reserve", "--heybros",
+    "--bakuha", "--del", "--cancel", "--destroy", "--hakai", "--explosion",
+    "--no", "--in", "--join",
+    "--nuke", "--out", "--leave", "--dismiss",
+    "--rooms",
+    "--force-bakuha-tekumakumayakonn-tekumakumayakonn",
+    "--help"
+    ]
 room_number_pool = list(range(1, 100))
 room_number_pool_file = "room_number_pool.bot4wz.pickle"
 rooms = []
@@ -123,6 +131,7 @@ temp_message_ids_file = "temp_message_ids.bot4wz.pickle"
 last_process_message_timestamp = datetime.utcnow()
 
 usage = """\
+```
 つかいかた:
 
 ホスト
@@ -138,6 +147,37 @@ usage = """\
   部屋一覧 --rooms
   無理矢理部屋を消す（干しっぱなし用、管理者使用推奨） --force-bakuha-tekumakumayakonn-tekumakumayakonn 部屋番号
   つかいかたを出す --help
+
+How to use:
+  Send a [--commands] below on #general（de）.
+
+Host
+  Create room: --yyk [room name]（無制限 is default） 無制限 means all welcome.
+    --yyk is the same as these: --call, --create, --reserve, --heybros
+
+  Call 1 to 6 brothers: --yyk1to6 [room name]（無制限 is default）
+    --yyk1to6 is the same as these: --call1to6, --create1to6, --reserve1to6, --heybros1to6
+
+    Example: Call 3 brothers for ranked match.
+      --call3 [room name]
+
+  Cencel: --bakuha [room number] (The room number can be omitted if there is only one room)
+    --bakuha is the same as these: --destroy, --explosion, --del, --cancel, --hakai
+    --hakai is Japanese it means destroy.
+
+Guest
+  Join: --no [room number] (The room number can be omitted if there is only one room)
+    --no is the same as these: --in, --join
+
+  Dismiss: --nuke [room number] (The room number can be omitted if you are in only one room)
+    --nuke is the same as these: --out, --leave, --dismiss
+
+Others
+  See room list: --rooms
+  DANGER (DO NOT USE): --force-bakuha-tekumakumayakonn-tekumakumayakonn
+    tekumaku mayakonn is the magical words in Japan.
+  See this help: --help
+```
 """
 
 class RoomPicklable(object):
@@ -244,90 +284,66 @@ async def process_message(message):
         room_to_clean = None
         temp_message = False
         yyk_complete = False
-        if message.content.startswith("--yyk"):
-            capacity = 8
-            name = message.content.split("--yyk")[1]
-            if name:
-                if name[0] in ["1", "2", "3", "4", "5", "6", "１", "２", "３", "４", "５", "６"]:
-                    capacity = to_int(name[0]) + 1
-                    name = name.replace(name[0], "")
-            name = "無制限" if not name else name.strip()
-            room = Room(author=message.author, name=name, capacity=capacity)
-            rooms.append(room)
-            yyk_complete = True
-            reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
-            room_to_clean = room
-            rooms.sort(key=lambda room: room.number)
 
-        if message.content.startswith("--bakuha"):
-            room_number = message.content.split("--bakuha")[1]
-            if room_number == "":
-                owned_rooms = []
-                for room in rooms:
-                    if message.author.id == room.owner.id:
-                        owned_rooms.append(room)
-                if len(owned_rooms) == 1:
-                    room = owned_rooms[0]
-                    delete_room(room)
-                    reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
-                    room_to_clean = room
-                else:
-                    reply = "複数の部屋を建てたときは部屋番号を指定してね"
-                    temp_message = True
-            else:
-                room_number = to_int(room_number)
-                if room_number is None:
-                    reply = "部屋番号をアラビア数字で指定してね"
-                    temp_message = True
-                else:
-                    room = None
-                    for room_ in rooms:
-                        if room_number == room_.number:
-                            if message.author.id == room_.owner.id:
-                                room = room_
-                                break
-                    if room is None:
-                        reply = "その番号の部屋がないか、ホストではないため爆破できません"
-                        temp_message = True
-                    else:
+        for command in ["--yyk", "--call", "--create", "--reserve", "--heybros"]:
+            if message.content.startswith(command):
+                capacity = 8
+                name = message.content.split(command)[1]
+                if name:
+                    if name[0] in ["1", "2", "3", "4", "5", "6", "１", "２", "３", "４", "５", "６"]:
+                        capacity = to_int(name[0]) + 1
+                        name = name.replace(name[0], "")
+                name = "無制限" if not name else name.strip()
+                room = Room(author=message.author, name=name, capacity=capacity)
+                rooms.append(room)
+                yyk_complete = True
+                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                room_to_clean = room
+                rooms.sort(key=lambda room: room.number)
+
+        for command in ["--bakuha", "--del", "--cancel", "--destroy", "--hakai", "--explosion"]:
+            if message.content.startswith(command):
+                room_number = message.content.split(command)[1]
+                if room_number == "":
+                    owned_rooms = []
+                    for room in rooms:
+                        if message.author.id == room.owner.id:
+                            owned_rooms.append(room)
+                    if len(owned_rooms) == 1:
+                        room = owned_rooms[0]
                         delete_room(room)
                         reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
                         room_to_clean = room
+                    else:
+                        reply = "複数の部屋を建てたときは部屋番号を指定してね"
+                        temp_message = True
+                else:
+                    room_number = to_int(room_number)
+                    if room_number is None:
+                        reply = "部屋番号をアラビア数字で指定してね"
+                        temp_message = True
+                    else:
+                        room = None
+                        for room_ in rooms:
+                            if room_number == room_.number:
+                                if message.author.id == room_.owner.id:
+                                    room = room_
+                                    break
+                        if room is None:
+                            reply = "その番号の部屋がないか、ホストではないため爆破できません"
+                            temp_message = True
+                        else:
+                            delete_room(room)
+                            reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members)
+                            room_to_clean = room
 
-        if message.content.startswith("--no"):
-            room_number = message.content.split("--no")[1]
-            room = None
-            if room_number == "":
-                if len(rooms) == 1:
-                    room = rooms[0]
-                    if not message.author in room.members:
-                        room.members.append(message.author)
-                        reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
-                        room_to_clean = room
-                    else:
-                        reply = "もう入ってるよ"
-                        temp_message = True
-                elif len(rooms) == 0:
-                    reply = "現在、部屋はありません"
-                    temp_message = True
-                else:
-                    reply = "複数の部屋があるときは部屋番号を指定してね"
-                    temp_message = True
-            else:
-                room_number = to_int(room_number)
-                if room_number is None:
-                    reply = "部屋番号をアラビア数字で指定してね"
-                    temp_message = True
-                else:
-                    room = None
-                    for room_ in rooms:
-                        if room_number == room_.number:
-                            room = room_
-                            break
-                    if room is None:
-                        reply = "その番号の部屋はありません"
-                        temp_message = True
-                    else:
+        for command in ["--no", "--in", "--join"]:
+            if message.content.startswith(command):
+                room_number = message.content.split(command)[1]
+                room = None
+                if room_number == "":
+                    if len(rooms) == 1:
+                        room = rooms[0]
                         if not message.author in room.members:
                             room.members.append(message.author)
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
@@ -335,54 +351,52 @@ async def process_message(message):
                         else:
                             reply = "もう入ってるよ"
                             temp_message = True
-            if room is not None:
-                if len(room.members) == room.capacity:
-                    reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
-                    delete_room(room)
-                    room_to_clean = room
-
-        if message.content.startswith("--nuke"):
-            room_number = message.content.split("--nuke")[1]
-            if room_number == "":
-                entered_rooms = []
-                for room in rooms:
-                    for member in room.members:
-                        if message.author.id == member.id:
-                            entered_rooms.append(room)
-                            break
-                if len(entered_rooms) == 1:
-                    room = entered_rooms[0]
-                    if room.owner == message.author:
-                        reply = "ホストが抜けるときは--bakuhaを使ってね"
+                    elif len(rooms) == 0:
+                        reply = "現在、部屋はありません"
                         temp_message = True
                     else:
-                        room.members.pop(room.members.index(message.author))
-                        reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                        reply = "複数の部屋があるときは部屋番号を指定してね"
+                        temp_message = True
+                else:
+                    room_number = to_int(room_number)
+                    if room_number is None:
+                        reply = "部屋番号をアラビア数字で指定してね"
+                        temp_message = True
+                    else:
+                        room = None
+                        for room_ in rooms:
+                            if room_number == room_.number:
+                                room = room_
+                                break
+                        if room is None:
+                            reply = "その番号の部屋はありません"
+                            temp_message = True
+                        else:
+                            if not message.author in room.members:
+                                room.members.append(message.author)
+                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                                room_to_clean = room
+                            else:
+                                reply = "もう入ってるよ"
+                                temp_message = True
+                if room is not None:
+                    if len(room.members) == room.capacity:
+                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
+                        delete_room(room)
                         room_to_clean = room
-                elif len(entered_rooms) == 0:
-                    reply = "どこにも入ってないよ"
-                    temp_message = True
-                else:
-                    reply = "複数の部屋に入っているときは部屋番号を指定してね"
-                    temp_message = True
-            else:
-                room_number = to_int(room_number)
-                if room_number is None:
-                    reply = "部屋番号をアラビア数字で指定してね"
-                    temp_message = True
-                else:
-                    room = None
-                    for room_ in rooms:
-                        if room_number == room_.number:
-                            for member in room_.members:
-                                if message.author.id == member.id:
-                                    room = room_
-                                    break
-                            break
-                    if room is None:
-                        reply = "その番号の部屋がないか、入っていないので抜けれません"
-                        temp_message = True
-                    else:
+
+        for command in ["--nuke", "--out", "--leave", "--dismiss"]:
+            if message.content.startswith(command):
+                room_number = message.content.split(command)[1]
+                if room_number == "":
+                    entered_rooms = []
+                    for room in rooms:
+                        for member in room.members:
+                            if message.author.id == member.id:
+                                entered_rooms.append(room)
+                                break
+                    if len(entered_rooms) == 1:
+                        room = entered_rooms[0]
                         if room.owner == message.author:
                             reply = "ホストが抜けるときは--bakuhaを使ってね"
                             temp_message = True
@@ -390,6 +404,37 @@ async def process_message(message):
                             room.members.pop(room.members.index(message.author))
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
                             room_to_clean = room
+                    elif len(entered_rooms) == 0:
+                        reply = "どこにも入ってないよ"
+                        temp_message = True
+                    else:
+                        reply = "複数の部屋に入っているときは部屋番号を指定してね"
+                        temp_message = True
+                else:
+                    room_number = to_int(room_number)
+                    if room_number is None:
+                        reply = "部屋番号をアラビア数字で指定してね"
+                        temp_message = True
+                    else:
+                        room = None
+                        for room_ in rooms:
+                            if room_number == room_.number:
+                                for member in room_.members:
+                                    if message.author.id == member.id:
+                                        room = room_
+                                        break
+                                break
+                        if room is None:
+                            reply = "その番号の部屋がないか、入っていないので抜けれません"
+                            temp_message = True
+                        else:
+                            if room.owner == message.author:
+                                reply = "ホストが抜けるときは--bakuhaを使ってね"
+                                temp_message = True
+                            else:
+                                room.members.pop(room.members.index(message.author))
+                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                                room_to_clean = room
 
         if message.content.startswith("--rooms"):
             lines = []
