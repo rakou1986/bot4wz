@@ -1,7 +1,7 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3 bot4wz.py
 
-_debug = True
+_debug = False
 
 """
 [requirements]
@@ -152,25 +152,31 @@ How to use:
   Send a [--commands] below on #general（de）.
 
 Host
-  Create room: --yyk [room name]（無制限 is default） 無制限 means all welcome.
-    --yyk is the same as these: --call, --create, --reserve, --heybros
+  Create room: --yyk [room name]（無制限 is default）
+  無制限 means all welcome.
+    --yyk is the same as these:
+      --call, --create, --reserve, --heybros
 
   Call 1 to 6 brothers: --yyk1to6 [room name]（無制限 is default）
-    --yyk1to6 is the same as these: --call1to6, --create1to6, --reserve1to6, --heybros1to6
+    --yyk1to6 is the same as these:
+      --call1to6, --create1to6, --reserve1to6, --heybros1to6
 
     Example: Call 3 brothers for ranked match.
       --call3 [room name]
 
   Cencel: --bakuha [room number] (The room number can be omitted if there is only one room)
-    --bakuha is the same as these: --destroy, --explosion, --del, --cancel, --hakai
-    --hakai is Japanese it means destroy.
+    --bakuha is the same as these:
+      --destroy, --explosion, --del, --cancel, --hakai
+    --hakai is Japanese 破壊 it means destroy.
 
 Guest
   Join: --no [room number] (The room number can be omitted if there is only one room)
-    --no is the same as these: --in, --join
+    --no is the same as these:
+      --in, --join
 
   Dismiss: --nuke [room number] (The room number can be omitted if you are in only one room)
-    --nuke is the same as these: --out, --leave, --dismiss
+    --nuke is the same as these:
+      --out, --leave, --dismiss
 
 Others
   See room list: --rooms
