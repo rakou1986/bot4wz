@@ -486,7 +486,7 @@ async def process_message(message):
                 "GG! BOYZ!!",
                 "えっガラさん1v1するんすか？見ものっすね",
                 "まどうさん偏差値なんぼっすか？",
-                ]
+                ])
             temp_message = True
 
         global last_process_message_timestamp
