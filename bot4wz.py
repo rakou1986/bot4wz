@@ -492,6 +492,7 @@ async def process_message(message):
                 "GG! BOYZ!!",
                 "えっガラさん1v1するんすか？見ものっすね",
                 "まどうさん偏差値なんぼっすか？",
+                "血肉にしていく",
                 ])
             temp_message = True
 
