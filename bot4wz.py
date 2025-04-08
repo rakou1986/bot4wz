@@ -55,10 +55,12 @@ TOKEN = None
 if _debug:
     token_file = "canary_token.txt"
     from key_store import canary_bot_status_channel_id as status_channel_id
+    from key_store import canary_bot_target_channel_id as target_channel_id
     from key_store import canary_bot_server_id as guild_id
 else:
     token_file = "token.txt"
     from key_store import available_bot_status_channel_id as status_channel_id
+    from key_store import available_bot_target_channel_id as target_channel_id
     from key_store import available_bot_server_id as guild_id
 
 if os.path.exists(token_file):
@@ -596,7 +598,7 @@ async def on_message(message):
     # bot自身の発言を拾わない
     if message.author.bot:
         return
-    if message.channel.name == "general（de）":
+    if message.channel.id == target_channel_id:
         for command in bot_commands:
             if message.content.startswith(command):
                 jst = datetime.utcnow() + timedelta(hours=9)
