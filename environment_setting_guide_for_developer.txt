@@ -33,7 +33,7 @@ canary_bot_target_channel_id = 開発用のテキストチャンネルID（タ�
 canary_bot_server_id = 開発用のサーバーID
 
 available_bot_status_channel_id = warzone-aoeのテキストチャンネルID（ステータス、# bot_status）
-available_bot_target_channel_id = warzone-aoeテキストチャンネルID（ターゲット、コマンドを受け付けるところ）
+available_bot_target_channel_id = warzone-aoeのテキストチャンネルID（ターゲット、コマンドを受け付けるところ）
 available_bot_server_id = warzone-aoeのサーバーID
 
 bot4wz.py, token.txt, bot_settings.pyを同じフォルダに置く
