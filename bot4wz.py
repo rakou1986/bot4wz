@@ -15,7 +15,7 @@ Version: 1.7.3
 [discord developer setting]
 Bot:
   MESSAGE CONTENT INTENT: enable
-  TOKEN: Press "Reset Token". Token appear once. Copy token and s/YOUR_DISCORD_APP_TOKEN_HERE/copied_token/ and save.
+  TOKEN: Press "Reset Token". Token appear once. Copy token and paste to token.txt
 
 OAuth2:
   SCOPES:
