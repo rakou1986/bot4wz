@@ -666,6 +666,7 @@ def main():
         print("終了命令Ctrl+Cを受け付けました。非同期タスクの終了を待っています…")
     except discord.errors.LoginFailure:
         print("botがDiscordにログインできませんでした。有効なトークンをtoken.txtに保存してください。")
+        print("トークンが有効ならば、Discordに問題が起きているかもしれません。")
         time.sleep(10)
     finally:
         for task in tasks:
