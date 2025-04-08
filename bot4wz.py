@@ -89,8 +89,6 @@ warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、r
 
   @rate_counseler（名前が黄色い人）を呼んで、貼り付けたURLを押してもらって、botを認証してもらう。
 
-  【注意】botを使用するテキストチャンネル名は general（de） でなければなりません！（カッコは全角）
-
   Dicord Developerの画面に戻り、 SETTINGS > Bot を開く
   TOKEN > Reset Token を押すたびに1度だけ出てくる Token をコピーして、token.txt という名前で bot4wz.exe と同じフォルダに保存する。
   ファイル名は token.txt でなければなりません。
