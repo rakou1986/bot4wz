@@ -664,6 +664,9 @@ def main():
         loop.run_until_complete(bot.start(TOKEN))
     except KeyboardInterrupt:
         print("終了命令Ctrl+Cを受け付けました。非同期タスクの終了を待っています…")
+    except discord.errors.LoginFailure:
+        print("botがDiscordにログインできませんでした。有効なトークンをtoken.txtに保存してください。")
+        time.sleep(10)
     finally:
         for task in tasks:
             task.cancel()
