@@ -1,5 +1,5 @@
 #coding: utf-8
-#!/path/to/Python_3.6.3 bot4wz.py
+#!/path/to/Python_3.6.3
 
 _debug = True
 
