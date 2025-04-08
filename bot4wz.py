@@ -98,7 +98,14 @@ warzone-aoeで認証済みのbotのトークンはrakouが発行しますが、r
 
 手順を実行したらこのウインドウを閉じて、再度bot4wz.exeをダブルクリックすればbotが起動します。
 
+botが起動すると、# bot_statusチャンネルに、botを起動したPCのホスト名が出ます。
+恥ずかしいホスト名とか、人に見られたくないホスト名は、事前に変更をおすすめします。
+できれば誰のPCか分かる名前だとよいでしょう。
+Windows 10では、設定 > システム > バージョン情報 > デバイス名
+これがホスト名です。「このPCの名前を変更」で変更します。
+
 botを起動後、botが1回応答すると、3つの.pickleファイルが作られます。これらを触らないようにしてください。
+ただしbotがなにか動作不良を起こした場合はこれらを削除すると初期化できます。
 
 """)
     input("Enterを押して終了: ")
@@ -545,7 +552,7 @@ async def report_survive():
 
 @bot.event
 async def on_ready():
-    # check_already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
+    # already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
     channel = bot.get_channel(status_channel_id)
     messages = await channel.history(limit=1).flatten()
     if messages:
@@ -553,7 +560,7 @@ async def on_ready():
         if message.content.startswith(f"{bot.user.id} running"):
             delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
             if delta.total_seconds() < 900:
-                print("botが実行中であることをbot自身がステータスチャンネルに報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
+                print("botが実行中であることをbot自身がステータスチャンネル # bot_status に報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
                 await asyncio.sleep(10)
                 await bot.close()
                 return
