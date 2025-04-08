@@ -24,21 +24,27 @@ python -m discord --version
 - discord.py v1.7.3-final
 を確認
 
-bot4wz.py, app_token.py, run.batを同じフォルダに置く
-run.batをダブルクリックで起動
+README.mdを参考にtoken.txtを用意する。
 
-うっかり閉じるボタンを押すと困るので、閉じるボタンがないウインドウが開く
-必ず Ctrl + C で終了（しばらく待つ）
-タスクバーで右クリック→ウインドウを閉じる、で閉じる
+以下のようにbot_settings.pyを作る。IDは開発者モードに設定したDiscordで各所を右クリックして取得する。
 
-botが1回応答するとそのフォルダに
-room_number_pool.bot4wz.pickle
-rooms.bot4wz.pickle
-temp_message_ids.bot4wz.pickle
-というファイルが作られる。なくさない。触らない。
+canary_bot_status_channel_id = 開発用のテキストチャンネルID（ステータス）
+canary_bot_target_channel_id = 開発用のテキストチャンネルID（ターゲット、コマンドを受け付けるところ）
+canary_bot_server_id = 開発用のサーバーID
 
+available_bot_status_channel_id = warzone-aoeのテキストチャンネルID（ステータス、# bot_status）
+available_bot_target_channel_id = warzone-aoeテキストチャンネルID（ターゲット、コマンドを受け付けるところ）
+available_bot_server_id = warzone-aoeのサーバーID
+
+bot4wz.py, token.txt, bot_settings.pyを同じフォルダに置く
+python bot4wz.pyで起動
+
+うっかり閉じるボタンを押すと困るので、閉じるボタンが消える
+必ず Ctrl + C で終了（押してからしばらく待つ）
+閉じるにはタスクバーで右クリック→ウインドウを閉じる
 
 bot4wz.exeの作り方
 pip install pyinstaller
 pyinstaller --onefile bot4wz.py
+bot4wz/dist/bot4wz.exeができる
 ```
