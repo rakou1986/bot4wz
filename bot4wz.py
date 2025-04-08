@@ -1,7 +1,7 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3 bot4wz.py
 
-_debug = False
+_debug = True
 
 """
 [requirements]
@@ -55,12 +55,10 @@ TOKEN = None
 if _debug:
     token_file = "canary_token.txt"
     from key_store import canary_bot_status_channel_id as status_channel_id
-    from key_store import canary_bot_id as bot_id
     from key_store import canary_bot_server_id as guild_id
 else:
     token_file = "token.txt"
     from key_store import available_bot_status_channel_id as status_channel_id
-    from key_store import available_bot_id as bot_id
     from key_store import available_bot_server_id as guild_id
 
 if os.path.exists(token_file):
@@ -131,6 +129,7 @@ rooms_file = "rooms.bot4wz.pickle"
 temp_message_ids = []
 temp_message_ids_file = "temp_message_ids.bot4wz.pickle"
 last_process_message_timestamp = datetime.utcnow()
+last_running = None
 
 usage = """\
 ```
@@ -528,14 +527,20 @@ async def temp_message_cleaner():
             temp_message_ids.clear()
 
 async def report_survive():
+    global last_running
     if not on_ready_complete.is_set():
         on_ready_complete.wait()
     await asyncio.sleep(5)
+    channel = bot.get_channel(status_channel_id)
+    hostname = socket.gethostname()
+    if channel:
+        await channel.send(f"{bot.user.id} launch on {hostname}")
     while True:
-        channel = bot.get_channel(status_channel_id)
         if channel:
-            hostname = socket.gethostname()
-            await channel.send(f"{bot_id} running on {hostname}")
+            sent_message = await channel.send(f"{bot.user.id} running on {hostname}")
+            if last_running is not None:
+                await last_running.delete()
+            last_running = sent_message
         await asyncio.sleep(300)
 
 @bot.event
@@ -545,7 +550,7 @@ async def on_ready():
     messages = await channel.history(limit=1).flatten()
     if messages:
         message = messages[0]
-        if message.content.startswith(f"{bot_id} running"):
+        if message.content.startswith(f"{bot.user.id} running"):
             delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
             if delta.total_seconds() < 900:
                 print("botが実行中であることをbot自身がステータスチャンネルに報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
