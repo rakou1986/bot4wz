@@ -52,6 +52,8 @@ from discord.ext import commands
 
 TOKEN = None
 
+status_channel_id = 0
+
 if _debug:
     token_file = "canary_token.txt"
     from bot_settings import canary_bot_status_channel_id as status_channel_id
@@ -555,16 +557,17 @@ async def report_survive():
 async def on_ready():
     # already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
     channel = bot.get_channel(status_channel_id)
-    messages = await channel.history(limit=1).flatten()
-    if messages:
-        message = messages[0]
-        if message.content.startswith(f"{bot.user.id} running"):
-            delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
-            if delta.total_seconds() < 900:
-                print("botが実行中であることをbot自身がステータスチャンネル # bot_status に報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
-                await asyncio.sleep(10)
-                await bot.close()
-                return
+    if channel:
+        messages = await channel.history(limit=1).flatten()
+        if messages:
+            message = messages[0]
+            if message.content.startswith(f"{bot.user.id} running"):
+                delta = datetime.utcnow() - message.created_at.replace(tzinfo=None)
+                if delta.total_seconds() < 900:
+                    print("botが実行中であることをbot自身がステータスチャンネル # bot_status に報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
+                    await asyncio.sleep(10)
+                    await bot.close()
+                    return
 
     print("前回の状態を読み取り中。")
     await load(bot)
