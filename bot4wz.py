@@ -123,6 +123,7 @@ botを起動後、botが1回応答すると、3つの.pickleファイルが作�
 
 lock = asyncio.Lock()
 on_ready_complete = asyncio.Event()
+quit = asyncio.Event()
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -518,12 +519,13 @@ async def room_cleaner(room, received_message, sent_message):
             break
 
 async def temp_message_cleaner():
-    if not on_ready_complete.is_set():
-        on_ready_complete.wait()
-    await asyncio.sleep(5)
     global last_process_message_timestamp
-    await bot.wait_until_ready()
-    await asyncio.sleep(120)
+    while True:
+        if on_ready_complete.is_set():
+            break
+        await asyncio.sleep(1)
+    if quit.is_set():
+        return
     while True:
         await asyncio.sleep(3)
         if timedelta(minutes=2) <= datetime.utcnow() - last_process_message_timestamp:
@@ -539,9 +541,12 @@ async def temp_message_cleaner():
 
 async def report_survive():
     global last_running
-    if not on_ready_complete.is_set():
-        on_ready_complete.wait()
-    await asyncio.sleep(5)
+    while True:
+        if on_ready_complete.is_set():
+            break
+        await asyncio.sleep(1)
+    if quit.is_set():
+        return
     channel = bot.get_channel(status_channel_id)
     hostname = socket.gethostname()
     if channel:
@@ -553,6 +558,17 @@ async def report_survive():
                 await last_running.delete()
             last_running = sent_message
         await asyncio.sleep(300)
+
+async def close_bot():
+    while True:
+        if quit.is_set():
+            break
+        if on_ready_complete.is_set():
+            return
+        await asyncio.sleep(1)
+    await asyncio.sleep(1)
+    await bot.wait_until_ready()
+    await bot.close()
 
 @bot.event
 async def on_ready():
@@ -567,7 +583,7 @@ async def on_ready():
                 if delta.total_seconds() < 900:
                     print("botが実行中であることをbot自身がステータスチャンネル # bot_status に報告してから間もないため他のPCでbotが実行されている可能性があります。多重実行を防ぐためbotを実行せずに終了します。")
                     await asyncio.sleep(10)
-                    await bot.close()
+                    quit.set()
                     return
 
     print("前回の状態を読み取り中。")
@@ -674,6 +690,7 @@ def main():
     tasks = []
     tasks.append(loop.create_task(temp_message_cleaner()))
     tasks.append(loop.create_task(report_survive()))
+    tasks.append(loop.create_task(close_bot()))
     asyncio.gather(*tasks, return_exceptions=True) # ssl.SSLErrorの出所を探るため、例外がタスクから来た場合に Ctrl+C を押すまで保留する
     try:
         loop.run_until_complete(bot.start(TOKEN))
