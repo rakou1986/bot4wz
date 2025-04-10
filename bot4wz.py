@@ -65,6 +65,14 @@ else:
     from bot_settings import available_bot_target_channel_id as target_channel_id
     from bot_settings import available_bot_server_id as guild_id
 
+try:
+    from secret import secret_commands
+    from secret import process_secret_commands
+    print("隠しコマンドが有効です。")
+except ImportError:
+    secret_commands = []
+    process_secret_commands = None
+
 if os.path.exists(token_file):
     with open(token_file) as f:
         TOKEN = f.read().strip()
@@ -128,9 +136,8 @@ bot_commands = [
     "--nuke", "--out", "--leave", "--dismiss",
     "--rooms",
     "--force-bakuha-tekumakumayakonn-tekumakumayakonn",
-    "--remember-takaomikawahashi",
     "--help"
-    ]
+    ] + secret_commands
 room_number_pool = list(range(1, 100))
 room_number_pool_file = "room_number_pool.bot4wz.pickle"
 rooms = []
@@ -485,18 +492,12 @@ async def process_message(message):
             reply = usage
             temp_message = True
 
-        if message.content.startswith("--remember-takaomikawahashi"):
-            reply = random.choice([
-                "学びっすね",
-                "マジ破壊されたわ",
-                "これがインプルーブ",
-                "ソーリー、マイバ、あぁ。",
-                "GG! BOYZ!!",
-                "えっガラさん1v1するんすか？見ものっすね",
-                "まどうさん偏差値なんぼっすか？",
-                "血肉にしていく",
-                ])
-            temp_message = True
+        if secret_commands and process_secret_commands:
+            for command in secret_commands:
+                if message.content.startswith(command):
+                    reply = process_secret_commands(message)
+                    temp_message = True
+                    break
 
         global last_process_message_timestamp
         last_process_message_timestamp = datetime.utcnow()
