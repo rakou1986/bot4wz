@@ -219,6 +219,7 @@ class RoomPicklable(object):
         self.member_ids = [user.id for user in room.members]
         self.capacity = room.capacity
         self.garbage_queue = room.garbage_queue
+        self.last_notice_timestamp = room.last_notice_timestamp
 
     async def to_room(self, bot):
         guild = bot.get_guild(guild_id)
@@ -238,11 +239,11 @@ class RoomPicklable(object):
             except discord.NotFound:
                 continue
 
-        #owner = await bot.fetch_user(self.owner_id)
-        #members = [await bot.fetch_user(user_id) for user_id in self.member_ids]
         room = Room(author=owner, name=self.name, capacity=self.capacity)
         room.number = self.number
         room.members = members
+        room.garbage_queue = self.garbage_queue
+        room.last_notice_timestamp = self.last_notice_timestamp
         return room
 
 
@@ -255,6 +256,7 @@ class Room(object):
         self.members = [author]
         self.capacity = capacity
         self.garbage_queue = []
+        self.last_notice_timestamp = datetime.utcnow()
 
 
 async def save():
@@ -313,7 +315,6 @@ async def process_message(message):
         reply = "初期値。問題が起きているのでrakouに連絡"
         room_to_clean = None
         temp_message = False
-        yyk_complete = False
 
         for command in ["--yyk", "--call", "--create", "--reserve", "--heybros"]:
             if message.content.startswith(command):
@@ -326,7 +327,6 @@ async def process_message(message):
                 name = "無制限" if not name else name.strip()
                 room = Room(author=message.author, name=name, capacity=capacity)
                 rooms.append(room)
-                yyk_complete = True
                 reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
                 room_to_clean = room
                 rooms.sort(key=lambda room: room.number)
@@ -382,6 +382,7 @@ async def process_message(message):
                         room = rooms[0]
                         if not message.author in room.members:
                             room.members.append(message.author)
+                            room.last_notice_timestamp = datetime.utcnow()
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
                             room_to_clean = room
                         else:
@@ -413,6 +414,7 @@ async def process_message(message):
                         else:
                             if not message.author in room.members:
                                 room.members.append(message.author)
+                                room.last_notice_timestamp = datetime.utcnow()
                                 reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
                                 room_to_clean = room
                             else:
@@ -441,6 +443,7 @@ async def process_message(message):
                             temp_message = True
                         else:
                             room.members.pop(room.members.index(message.author))
+                            room.last_notice_timestamp = datetime.utcnow()
                             reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
                             room_to_clean = room
                     elif len(entered_rooms) == 0:
@@ -475,6 +478,7 @@ async def process_message(message):
                                 temp_message = True
                             else:
                                 room.members.pop(room.members.index(message.author))
+                                room.last_notice_timestamp = datetime.utcnow()
                                 reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
                                 room_to_clean = room
 
@@ -525,7 +529,7 @@ async def process_message(message):
         global last_process_message_timestamp
         last_process_message_timestamp = datetime.utcnow()
 
-        return reply, room_to_clean, temp_message, yyk_complete
+        return reply, room_to_clean, temp_message
 
 async def room_cleaner(room, received_message, sent_message):
     room.garbage_queue.append(sent_message.id)
@@ -539,6 +543,36 @@ async def room_cleaner(room, received_message, sent_message):
                 pass
         else:
             break
+
+async def notice_rooms():
+    while True:
+        if on_ready_complete.is_set():
+            break
+        await asyncio.sleep(1)
+    if quit.is_set():
+        return
+    channel = bot.get_channel(target_channel_id)
+    if not channel:
+        return
+    while True:
+        await asyncio.sleep(3)
+        for room in rooms:
+            if timedelta(minutes=1) <= datetime.utcnow() - room.last_notice_timestamp:
+                line = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                sent_message = await channel.send(line, allowed_mentions=allowed_mentions)
+                room.garbage_queue.append(sent_message.id)
+                room.last_notice_timestamp = datetime.utcnow()
+                while True:
+                    if 1 < len(room.garbage_queue):
+                        message_id = room.garbage_queue.pop(0)
+                        try:
+                            msg = await channel.fetch_message(message_id)
+                            await msg.delete()
+                        except discord.NotFound:
+                            pass
+                    else:
+                        break
+
 
 async def temp_message_cleaner():
     global last_process_message_timestamp
@@ -647,18 +681,11 @@ async def on_message(message):
             if message.content.startswith(command):
                 jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"INPUT:\n{message.content}\n{jst}\n")
-                reply, room_to_clean, temp_message, yyk_complete = await process_message(message)
+                reply, room_to_clean, temp_message = await process_message(message)
                 sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
                 if room_to_clean:
                     await room_cleaner(room_to_clean, message, sent_message)
                 if temp_message:
-                    temp_message_ids.append( (message.channel.id, sent_message.id) )
-                if yyk_complete:
-                    lines = ["=========== 部屋一覧 ===========\n"]
-                    for room in rooms:
-                        lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
-                    line = "\n".join(lines)
-                    sent_message = await message.channel.send(line, allowed_mentions=allowed_mentions)
                     temp_message_ids.append( (message.channel.id, sent_message.id) )
                 jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"OUTPUT:\n{reply}\n{jst}\n")
@@ -713,6 +740,7 @@ def main():
     tasks.append(loop.create_task(temp_message_cleaner()))
     tasks.append(loop.create_task(report_survive()))
     tasks.append(loop.create_task(close_bot()))
+    tasks.append(loop.create_task(notice_rooms()))
     asyncio.gather(*tasks, return_exceptions=True) # ssl.SSLErrorの出所を探るため、例外がタスクから来た場合に Ctrl+C を押すまで保留する
     try:
         loop.run_until_complete(bot.start(TOKEN))
