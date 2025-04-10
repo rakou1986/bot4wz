@@ -1,7 +1,7 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3
 
-_debug = True
+_debug = False
 
 """
 [requirements]
@@ -348,10 +348,7 @@ async def process_message(message):
                         reply = "現在、部屋はありません"
                         temp_message = True
                     else:
-                        lines = ["複数の部屋を建てたときは部屋番号を指定してね\n"]
-                        for room in rooms:
-                            lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
-                        reply = "\n".join(lines)
+                        reply = "複数の部屋を建てたときは部屋番号を指定してね"
                         temp_message = True
                 else:
                     room_number = to_int(room_number)
@@ -392,10 +389,7 @@ async def process_message(message):
                         reply = "現在、部屋はありません"
                         temp_message = True
                     else:
-                        lines = ["複数の部屋があるときは部屋番号を指定してね\n"]
-                        for room in rooms:
-                            lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
-                        reply = "\n".join(lines)
+                        reply = "複数の部屋があるときは部屋番号を指定してね"
                         temp_message = True
                 else:
                     room_number = to_int(room_number)
@@ -450,10 +444,7 @@ async def process_message(message):
                         reply = "どこにも入ってないよ"
                         temp_message = True
                     else:
-                        lines = ["複数の部屋に入っているときは部屋番号を指定してね\n"]
-                        for room in rooms:
-                            lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
-                        reply = "\n".join(lines)
+                        reply = "複数の部屋に入っているときは部屋番号を指定してね"
                         temp_message = True
                 else:
                     room_number = to_int(room_number)
