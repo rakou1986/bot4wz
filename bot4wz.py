@@ -137,7 +137,7 @@ bot_commands = [
     "--nuke", "--out", "--leave", "--dismiss",
     "--rooms",
     "--force-bakuha-tekumakumayakonn-tekumakumayakonn",
-    "--help"
+    "--help", "--help-en",
     ] + secret_commands
 room_number_pool = list(range(1, 100))
 room_number_pool_file = "room_number_pool.bot4wz.pickle"
@@ -165,7 +165,12 @@ usage = """\
   部屋一覧 --rooms
   無理矢理部屋を消す（干しっぱなし用、管理者使用推奨） --force-bakuha-tekumakumayakonn-tekumakumayakonn 部屋番号
   つかいかたを出す --help
+  How to use in English: --help-en
+```
+"""
 
+usage_en = """\
+```
 How to use:
   Send a [--commands] below on #general（de）.
 
@@ -200,7 +205,8 @@ Others
   See room list: --rooms
   DANGER (DO NOT USE): --force-bakuha-tekumakumayakonn-tekumakumayakonn
     tekumaku mayakonn is the magical words in Japan.
-  See this help: --help
+  日本語でつかいかたを出す: --help
+  See this help: --help-en
 ```
 """
 
@@ -491,6 +497,10 @@ async def process_message(message):
 
         if message.content.startswith("--help"):
             reply = usage
+            temp_message = True
+
+        if message.content.startswith("--help-en"):
+            reply = usage_en
             temp_message = True
 
         if secret_commands and process_secret_commands:
