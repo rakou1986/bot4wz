@@ -572,7 +572,7 @@ async def notice_rooms():
                             pass
                     else:
                         break
-
+                await save()
 
 async def temp_message_cleaner():
     global last_process_message_timestamp
