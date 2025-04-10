@@ -557,7 +557,7 @@ async def notice_rooms():
     while True:
         await asyncio.sleep(3)
         for room in rooms:
-            if timedelta(minutes=1) <= datetime.utcnow() - room.last_notice_timestamp:
+            if timedelta(minutes=8) <= datetime.utcnow() - room.last_notice_timestamp:
                 line = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
                 sent_message = await channel.send(line, allowed_mentions=allowed_mentions)
                 room.garbage_queue.append(sent_message.id)
