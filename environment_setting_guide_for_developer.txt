@@ -47,4 +47,8 @@ bot4wz.exeの作り方
 pip install pyinstaller
 pyinstaller --onefile bot4wz.py
 bot4wz/dist/bot4wz.exeができる
+
+もし機能追加や改善をするならv1（最初のコミット）を読むと分かりやすいかもしれない。
+ほとんどの部分はこれの修飾です。
+自分で言うけど最初にまあまあよく整理したと思う。
 ```
