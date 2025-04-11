@@ -152,7 +152,10 @@ last_process_message_timestamp = datetime.utcnow()
 last_running = None
 warzone_players = []
 warzone_players_file = "warzone_players.bot4wz.pickle"
-warzone_rate_url = "http://warzone.php.xdomain.jp/?action=Rate"
+warzone_players_url = "http://warzone.php.xdomain.jp/?action=Rate"
+lazuaoe_players = []
+lazuaoe_players_file = "lazuaoe_players.bot4wz.pickle"
+lazuaoe_players_url = "http://lazuaoe.php.xdomain.jp/rate/?act=ply"
 
 usage = """\
 ```
@@ -282,6 +285,8 @@ async def save():
         pickle.dump(temp_message_ids, f)
     with open(warzone_players_file, "wb") as f:
         pickle.dump(warzone_players, f)
+    with open(lazuaoe_players_file, "wb") as f:
+        pickle.dump(lazuaoe_players, f)
 
 async def load(bot):
     global rooms
@@ -311,6 +316,13 @@ async def load(bot):
         with open(warzone_players_file, "rb") as f:
             try:
                 warzone_players = pickle.load(f)
+            except Exception as e:
+                pass
+    global lazuaoe_players
+    if os.path.exists(lazuaoe_players_file):
+        with open(lazuaoe_players_file, "rb") as f:
+            try:
+                lazuaoe_players = pickle.load(f)
             except Exception as e:
                 pass
 
@@ -658,7 +670,7 @@ async def list_warzone_players():
         timeout = aiohttp.ClientTimeout(total=15)
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(warzone_rate_url) as response:
+                async with session.get(warzone_players_url) as response:
                     html = await response.text()
                     html = html.replace("\r", "")
             match = re.search(r"var\s+UserData\s*=\s*(\[\s*(?:\[.*?\],?\s*)+\]);", html, re.DOTALL)
@@ -673,6 +685,40 @@ async def list_warzone_players():
                 # htmlに問題がありvar UserDataが見つからない
                 retry = True
                 continue
+        except asyncio.TimeoutError:
+            retry = True
+            continue
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            # 通信エラーなどで正しいHTMLが得られずにvar UserDataを扱っているときに問題が起きた
+            retry = True
+            continue
+
+async def list_lazuaoe_players():
+    global lazuaoe_players
+    while True:
+        if on_ready_complete.is_set():
+            break
+        await asyncio.sleep(1)
+    if quit.is_set():
+        return
+    retry = False
+    while True:
+        if retry:
+            await asyncio.sleep(300)
+        timeout = aiohttp.ClientTimeout(total=15)
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(lazuaoe_players_url) as response:
+                    html = await response.text()
+            lines = html.split("\n")
+            idx = lines.index("var PlayerList = [")
+            array_text = "".join(lines[idx:idx+3]).replace("var PlayerList = ", "")[:-1]
+            player_list = ast.literal_eval(array_text)
+            lazuaoe_players = [player[0] for player in player_list]
+            retry = False
+            await asyncio.sleep(43200) # 12時間
         except asyncio.TimeoutError:
             retry = True
             continue
@@ -799,6 +845,7 @@ def main():
     tasks.append(loop.create_task(close_bot()))
     tasks.append(loop.create_task(notice_rooms()))
     tasks.append(loop.create_task(list_warzone_players()))
+    tasks.append(loop.create_task(list_lazuaoe_players()))
     asyncio.gather(*tasks, return_exceptions=True) # ssl.SSLErrorの出所を探るため、例外がタスクから来た場合に Ctrl+C を押すまで保留する
     try:
         loop.run_until_complete(bot.start(TOKEN))
