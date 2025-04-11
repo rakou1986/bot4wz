@@ -1,7 +1,7 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3
 
-_debug = False
+_debug = True
 
 """
 [requirements]
@@ -35,12 +35,15 @@ $ python bot4wz.py
 Ctrl + C
 """
 
+import aiohttp
+import ast
 import asyncio
 from datetime import datetime, timedelta
 import os
 import pickle
 import psutil
 import random
+import re
 import socket
 import sys
 import time
@@ -147,6 +150,9 @@ temp_message_ids = []
 temp_message_ids_file = "temp_message_ids.bot4wz.pickle"
 last_process_message_timestamp = datetime.utcnow()
 last_running = None
+warzone_players = []
+warzone_players_file = "warzone_players.bot4wz.pickle"
+warzone_rate_url = "http://warzone.php.xdomain.jp/?action=Rate"
 
 usage = """\
 ```
@@ -274,6 +280,8 @@ async def save():
         pickle.dump(room_number_pool, f)
     with open(temp_message_ids_file, "wb") as f:
         pickle.dump(temp_message_ids, f)
+    with open(warzone_players_file, "wb") as f:
+        pickle.dump(warzone_players, f)
 
 async def load(bot):
     global rooms
@@ -296,6 +304,13 @@ async def load(bot):
         with open(temp_message_ids_file, "rb") as f:
             try:
                 temp_message_ids = pickle.load(f)
+            except Exception as e:
+                pass
+    global warzone_players
+    if os.path.exists(warzone_players_file):
+        with open(warzone_players_file, "rb") as f:
+            try:
+                warzone_players = pickle.load(f)
             except Exception as e:
                 pass
 
@@ -628,6 +643,46 @@ async def close_bot():
     await bot.wait_until_ready()
     await bot.close()
 
+async def list_warzone_players():
+    global warzone_players
+    while True:
+        if on_ready_complete.is_set():
+            break
+        await asyncio.sleep(1)
+    if quit.is_set():
+        return
+    retry = False
+    while True:
+        if retry:
+            await asyncio.sleep(60)
+        timeout = aiohttp.ClientTimeout(total=15)
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(warzone_rate_url) as response:
+                    html = await response.text()
+                    html = html.replace("\r", "")
+            match = re.search(r"var\s+UserData\s*=\s*(\[\s*(?:\[.*?\],?\s*)+\]);", html, re.DOTALL)
+            if match:
+                array_text = match.group(1)
+                array_text = array_text.replace("null", "None").replace("true", "True").replace("false", "False")
+                user_data = ast.literal_eval(array_text)
+                warzone_players = [row[1] for row in user_data]
+                retry = False
+                await asyncio.sleep(3600)
+            else:
+                # htmlに問題がありvar UserDataが見つからない
+                retry = True
+                continue
+        except asyncio.TimeoutError:
+            retry = True
+            continue
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            # 通信エラーなどで正しいHTMLが得られずにvar UserDataを扱っているときに問題が起きた
+            retry = True
+            continue
+
 @bot.event
 async def on_ready():
     # already_running()がPC上での重複起動を防ぐのに対して、botの生存実績を見て、他の人がbotを実行中に重複実行を防ぐ
@@ -743,6 +798,7 @@ def main():
     tasks.append(loop.create_task(report_survive()))
     tasks.append(loop.create_task(close_bot()))
     tasks.append(loop.create_task(notice_rooms()))
+    tasks.append(loop.create_task(list_warzone_players()))
     asyncio.gather(*tasks, return_exceptions=True) # ssl.SSLErrorの出所を探るため、例外がタスクから来た場合に Ctrl+C を押すまで保留する
     try:
         loop.run_until_complete(bot.start(TOKEN))
