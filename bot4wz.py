@@ -143,18 +143,18 @@ bot_commands = [
     "--help", "--help-en",
     ] + secret_commands
 room_number_pool = list(range(1, 100))
-room_number_pool_file = "bot4wz.room_number_pool.pickle"
+room_number_pool_file = ".bot4wz.room_number_pool.pickle"
 rooms = []
-rooms_file = "rooms.bot4wz.pickle"
+rooms_file = ".bot4wz.rooms.pickle"
 temp_message_ids = []
-temp_message_ids_file = "bot4wz.temp_message_ids.pickle"
+temp_message_ids_file = ".bot4wz.temp_message_ids.pickle"
 last_process_message_timestamp = datetime.utcnow()
 last_running = None
 warzone_players = []
-warzone_players_file = "bot4wz.warzone_players.pickle"
+warzone_players_file = ".bot4wz.warzone_players.pickle"
 warzone_players_url = "http://warzone.php.xdomain.jp/?action=Rate"
 lazuaoe_players = []
-lazuaoe_players_file = "bot4wz.lazuaoe_players.pickle"
+lazuaoe_players_file = ".bot4wz.lazuaoe_players.pickle"
 lazuaoe_players_url = "http://lazuaoe.php.xdomain.jp/rate/?act=ply"
 
 usage = """\
