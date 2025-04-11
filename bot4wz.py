@@ -210,6 +210,10 @@ Others
 ```
 """
 
+class RoomNumberExhaust(BaseException):
+    def __init__(self):
+        pass
+
 class RoomPicklable(object):
 
     def __init__(self, room):
@@ -250,7 +254,10 @@ class RoomPicklable(object):
 class Room(object):
 
     def __init__(self, author , name, capacity):
-        self.number = room_number_pool.pop(0)
+        try:
+            self.number = room_number_pool.pop(0)
+        except IndexError:
+            raise RoomNumberExhaust
         self.name = name
         self.owner = author
         self.members = [author]
@@ -325,11 +332,15 @@ async def process_message(message):
                         capacity = to_int(name[0]) + 1
                         name = name.replace(name[0], "")
                 name = "無制限" if not name else name.strip()
-                room = Room(author=message.author, name=name, capacity=capacity)
-                rooms.append(room)
-                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
-                room_to_clean = room
-                rooms.sort(key=lambda room: room.number)
+                try:
+                    room = Room(author=message.author, name=name, capacity=capacity)
+                    rooms.append(room)
+                    reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                    room_to_clean = room
+                    rooms.sort(key=lambda room: room.number)
+                except RoomNumberExhaust:
+                    reply = "部屋は同時に100個しか建てれません"
+                    temp_message = True
 
         for command in ["--bakuha", "--del", "--cancel", "--destroy", "--hakai", "--explosion"]:
             if message.content.startswith(command):
