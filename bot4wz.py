@@ -685,6 +685,8 @@ async def on_ready():
 
     print("前回の状態を読み取り中。")
     await load(bot)
+    print("読み取り完了。botを実行します。")
+    print(f"{bot.user}でDicordにログインしました。")
     print(usage.at_launch)
 
     on_ready_complete.set()
