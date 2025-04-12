@@ -45,8 +45,31 @@ python bot4wz.pyで起動
 
 bot4wz.exeの作り方
 pip install pyinstaller
-pyinstaller --onefile bot4wz.py
+pyinstaller --onefile --clean --collect-all rapidfuzz bot4wz.py
 bot4wz/dist/bot4wz.exeができる
+
+これだけでは--collect-all rapidfuzzが余計なファイルを集めてしまうせいでbot4wz.exe実行時に以下のwarningが出て見苦しいので、以下を実行すれば簡単に掃除できるはず
+WARNING: file already exists but should not: ...
+
+pip uninstall pyinstaller
+git clone --branch v4.10 https://github.com/pyinstaller/pyinstaller.git
+cd pyinstaller/bootloader
+python ./waf distclean all
+以下のファイルから
+pyinstaller/bootloader/src/pyi_utils.c
+2か所にあるこの行をコメントアウト
+OTHERERROR("WARNING: file already exists but should not: %s\n", fnm);
+再度以下を実行して次へ
+cd pyinstaller/bootloader
+python ./waf distclean all
+cd pyinstaller
+pip install .
+cd bot4wz
+pyinstaller --onefile --clean --collect-all rapidfuzz bot4wz.py
+
+MSVC (Visual Studio) 2022 x64 runtime redistributable が入ってないといけないかも。
+現環境にはある。
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.43.34808\bin\HostX64\x64\CL.exe
 
 もし機能追加や改善をするならv1（最初のコミット）を読むと分かりやすいかもしれない。
 ほとんどの部分はこれの修飾です。
