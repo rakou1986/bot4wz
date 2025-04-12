@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         RakouBot Parameter Mapper for warzone-aoe
+// @name         rakou_bot parameter mapper for warzone
 // @namespace    http://tampermonkey.net/
 // @version      2025-04
 // @description  Mapping rakou_bot parameter to input form.
