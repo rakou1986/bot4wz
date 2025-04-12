@@ -663,7 +663,7 @@ async def list_lazuaoe_players():
         except asyncio.CancelledError:
             break
         except Exception as e:
-            # 通信エラーなどで正しいHTMLが得られずにvar UserDataを扱っているときに問題が起きた
+            # 通信エラーなどで正しいHTMLが得られずにvar PlayerListを扱っているときに問題が起きた
             retry = True
             continue
 
