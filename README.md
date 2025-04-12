@@ -14,7 +14,14 @@
   部屋一覧 --rooms
   無理矢理部屋を消す（干しっぱなし用、管理者使用推奨） --force-bakuha-tekumakumayakonn-tekumakumayakonn 部屋番号
   つかいかたを出す --help
+  How to use in English: --help-en
+  埋まり時のURLのつかいかた(warzone) --help-warzone-url
+  埋まり時のURLのつかいかた(lazuaoe) --help-lazuaoe-url
 
+
+【ホスト向けお得情報】
+ブラウザにTampermonkeyを入れて、埋まり時にbotが出すURLをクリックすると、入力が楽になります。
+詳しくは--help-warzone-url, または--help-lazuaoe-urlで確認してください。
 
 【bot4wz.exeを実行してくれる人向け】
 botの実行にはトークンが必要です。
