@@ -41,12 +41,13 @@ python bot4wz.pyで起動
 
 うっかり閉じるボタンを押すと困るので、閉じるボタンが消える
 必ず Ctrl + C で終了（押してからしばらく待つ）
-閉じるにはタスクバーで右クリック→ウインドウを閉じる
+cmd / PowerShellを閉じるにはタスクバーで右クリック→ウインドウを閉じる
 
 bot4wz.exeの作り方
 pip install pyinstaller
 pyinstaller --onefile --clean --collect-all rapidfuzz bot4wz.py
 bot4wz/dist/bot4wz.exeができる
+bot4wz.exe, token.txtさえあれば環境がなくても誰でもbotを実行できる。
 
 これだけでは--collect-all rapidfuzzが余計なファイルを集めてしまうせいでbot4wz.exe実行時に以下のwarningが出て見苦しいので、以下を実行すれば簡単に掃除できるはず
 WARNING: file already exists but should not: ...
