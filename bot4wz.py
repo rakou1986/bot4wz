@@ -1,7 +1,7 @@
 #coding: utf-8
 #!/path/to/Python_3.6.3
 
-_debug = True
+_debug = False
 
 """
 [requirements]
@@ -267,6 +267,9 @@ def create_customized_url(room):
         url = f"http://lazuaoe.php.xdomain.jp/rate/?act=mkt&rakou_bot_param_members={members_encoded}"
     discord_compatible_url = f"<{url}>"
     return discord_compatible_url
+
+def discord_compatible_str(string):
+    return string.replace("_", "\\_")
 
 async def process_message(message):
     async with lock:
@@ -705,7 +708,7 @@ async def on_message(message):
                 jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"INPUT:\n{message.content}\n{jst}\n")
                 reply, room_to_clean, temp_message = await process_message(message)
-                sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
+                sent_message = await message.channel.send(discord_compatible_str(reply), allowed_mentions=allowed_mentions)
                 if room_to_clean:
                     await room_cleaner(room_to_clean, message, sent_message)
                 if temp_message:
