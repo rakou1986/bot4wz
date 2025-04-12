@@ -24,7 +24,7 @@
             return;
         }
 
-        // 異なる名前空間、<script>タグ内のvar UserDataをパースしてvar user_nameとする
+        // 異なる名前空間、<script>タグ内のvar UserDataをパースしてvar playersとする
         var scripts = document.querySelectorAll("script");
         for (let script of scripts) {
             var text = script.textContent;
@@ -34,7 +34,6 @@
                 try {
                     /* eslint no-eval: 0 */
                     var players = eval(match[1]);
-                    window.players = players;
                 } catch (e) {
                     console.error("Failed to extract UserData", e);
                 }
