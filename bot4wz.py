@@ -250,7 +250,6 @@ def delete_room(room):
     room_number_pool.sort()
 
 def create_customized_url(room):
-    url = ""
     members = []
     for user in room.members:
         name = get_name(user)
@@ -261,11 +260,13 @@ def create_customized_url(room):
             name = "**" + name
         members.append(name)
     members_encoded = urllib.parse.quote(json.dumps(members, ensure_ascii=False))
+    # room.rating_system in ["warzone", "lazuaoe"] = True が保障されている
     if room.rating_system == "warzone":
         url = f"http://warzone.php.xdomain.jp/?action=NewGame&rakou_bot_param_members={members_encoded}"
     if room.rating_system == "lazuaoe":
         url = f"http://lazuaoe.php.xdomain.jp/rate/?act=mkt&rakou_bot_param_members={members_encoded}"
-    return url
+    discord_compatible_url = f"<{url}>"
+    return discord_compatible_url
 
 async def process_message(message):
     async with lock:
@@ -384,7 +385,7 @@ async def process_message(message):
                                 temp_message = True
                 if room is not None:
                     if len(room.members) == room.capacity:
-                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + "\n" + create_customized_url(room)
+                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + ("\n" + create_customized_url(room) if room.capacity in [6, 8] else "")
                         delete_room(room)
                         room_to_clean = room
 
