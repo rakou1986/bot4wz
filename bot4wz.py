@@ -712,6 +712,7 @@ async def on_message(message):
                 jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"OUTPUT:\n{reply}\n{jst}\n")
                 await save()
+                break
     await bot.process_commands(message)
 
 def disable_close_button():
