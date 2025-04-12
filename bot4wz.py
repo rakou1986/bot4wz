@@ -39,6 +39,7 @@ import aiohttp
 import ast
 import asyncio
 from datetime import datetime, timedelta
+import json
 import os
 import pickle
 import psutil
@@ -47,11 +48,13 @@ import re
 import socket
 import sys
 import time
+import urllib
 import win32gui
 import win32con
 
 import discord
 from discord.ext import commands
+import rapidfuzz
 
 TOKEN = None
 
@@ -134,7 +137,7 @@ allowed_mentions = discord.AllowedMentions(users=True)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 bot_commands = [
-    "--yyk", "--call", "--create", "--reserve", "--heybros",
+    "--yyk", "--call", "--create", "--reserve", "--heybros", "--lzyyk",
     "--bakuha", "--del", "--cancel", "--destroy", "--hakai", "--explosion",
     "--no", "--in", "--join",
     "--nuke", "--out", "--leave", "--dismiss",
@@ -162,7 +165,8 @@ usage = """\
 つかいかた:
 
 ホスト
-  部屋建て --yyk 部屋名（デフォルト無制限）
+  warzone部屋建て --yyk 部屋名（デフォルト無制限）
+  lazuaoe部屋建て --lzyyk 部屋名（デフォルトLN）
   1～6人を募集 --yyk1～6 部屋名
   爆破する --bakuha 部屋番号（1つしか立ててないときは省略可能）
 
@@ -233,6 +237,7 @@ class RoomPicklable(object):
         self.capacity = room.capacity
         self.garbage_queue = room.garbage_queue
         self.last_notice_timestamp = room.last_notice_timestamp
+        self.rating_system = room.rating_system
 
     async def to_room(self, bot):
         guild = bot.get_guild(guild_id)
@@ -251,8 +256,7 @@ class RoomPicklable(object):
                 members.append(member)
             except discord.NotFound:
                 continue
-
-        room = Room(author=owner, name=self.name, capacity=self.capacity)
+        room = Room(author=owner, name=self.name, capacity=self.capacity, rating_system=self.rating_system)
         room.number = self.number
         room.members = members
         room.garbage_queue = self.garbage_queue
@@ -262,7 +266,7 @@ class RoomPicklable(object):
 
 class Room(object):
 
-    def __init__(self, author , name, capacity):
+    def __init__(self, author , name, capacity, rating_system):
         try:
             self.number = room_number_pool.pop(0)
         except IndexError:
@@ -273,6 +277,7 @@ class Room(object):
         self.capacity = capacity
         self.garbage_queue = []
         self.last_notice_timestamp = datetime.utcnow()
+        self.rating_system = rating_system
 
 
 async def save():
@@ -344,13 +349,31 @@ def delete_room(room):
     room_number_pool.append(room.number)
     room_number_pool.sort()
 
+def create_customized_url(room):
+    url = ""
+    members = []
+    for user in room.members:
+        name = get_name(user)
+        match, similarity_score, idx = rapidfuzz.process.extractOne(name, warzone_players)
+        if 55 < similarity_score:
+            name = match
+        else:
+            name = "*" + name
+        members.append(name)
+    members_encoded = urllib.parse.quote(json.dumps(members, ensure_ascii=False))
+    if room.rating_system == "warzone":
+        url = f"http://warzone.php.xdomain.jp/?action=NewGame&rakou_bot_param_members={members_encoded}"
+    if room.rating_system == "lazuaoe":
+        url = f"http://lazuaoe.php.xdomain.jp/rate/?act=mkt&rakou_bot_param_members={members_encoded}"
+    return url
+
 async def process_message(message):
     async with lock:
         reply = "初期値。問題が起きているのでrakouに連絡"
         room_to_clean = None
         temp_message = False
 
-        for command in ["--yyk", "--call", "--create", "--reserve", "--heybros"]:
+        for command in ["--yyk", "--call", "--create", "--reserve", "--heybros", "--lzyyk"]:
             if message.content.startswith(command):
                 capacity = 8
                 name = message.content.split(command)[1]
@@ -358,9 +381,16 @@ async def process_message(message):
                     if name[0] in ["1", "2", "3", "4", "5", "6", "１", "２", "３", "４", "５", "６"]:
                         capacity = to_int(name[0]) + 1
                         name = name.replace(name[0], "")
-                name = "無制限" if not name else name.strip()
+                if not name:
+                    if command == "--lzyyk":
+                        name = "LN"
+                    else:
+                        name = "無制限"
+                else:
+                    name = name.strip()
+                rating_system = "lazuaoe" if command == "--lzyyk" else "warzone"
                 try:
-                    room = Room(author=message.author, name=name, capacity=capacity)
+                    room = Room(author=message.author, name=name, capacity=capacity, rating_system=rating_system)
                     rooms.append(room)
                     reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
                     room_to_clean = room
@@ -454,7 +484,7 @@ async def process_message(message):
                                 temp_message = True
                 if room is not None:
                     if len(room.members) == room.capacity:
-                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members)
+                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + "\n" + create_customized_url(room)
                         delete_room(room)
                         room_to_clean = room
 
