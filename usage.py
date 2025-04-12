@@ -111,7 +111,7 @@ Chromeの右上あたりにあるTampermonkeyのアイコンを右クリック�
 Tampermonkeyの設定画面に、userscript_for_lazuaoe.jsをドラッグ＆ドロップ。
 インストールを押す。
 
-別のタブでuserscript_for_warzone.jsのテキストが開いた場合は閉じる。
+別のタブでuserscript_for_lazuaoe.jsのテキストが開いた場合は閉じる。
 Tampermonkeyのタブに戻り、インストール済みUserScriptを開く。
 rakou_bot parameter mapper for lazuaoe がインストールされていて、有効になっていることを確認。
 
