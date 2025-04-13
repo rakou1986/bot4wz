@@ -270,9 +270,6 @@ def create_customized_url(room):
     discord_compatible_url = f"<{url}>"
     return discord_compatible_url
 
-def discord_compatible_str(string):
-    return string.replace("_", "\\_")
-
 async def process_message(message):
     async with lock:
         reply = "初期値。問題が起きているのでrakouに連絡"
@@ -298,7 +295,7 @@ async def process_message(message):
                 try:
                     room = Room(author=message.author, name=name, capacity=capacity, rating_system=rating_system)
                     rooms.append(room)
-                    reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                    reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members)
                     room_to_clean = room
                     rooms.sort(key=lambda room: room.number)
                 except RoomNumberExhaust:
@@ -354,7 +351,7 @@ async def process_message(message):
                         if not message.author in room.members:
                             room.members.append(message.author)
                             room.last_notice_timestamp = datetime.utcnow()
-                            reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                            reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + f"\n[IN] `{get_name(message.author)}`"
                             room_to_clean = room
                         else:
                             reply = "もう入ってるよ"
@@ -383,14 +380,14 @@ async def process_message(message):
                             if not message.author in room.members:
                                 room.members.append(message.author)
                                 room.last_notice_timestamp = datetime.utcnow()
-                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[IN] {get_name(message.author)}"
+                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + f"\n[IN] `{get_name(message.author)}`"
                                 room_to_clean = room
                             else:
                                 reply = "もう入ってるよ"
                                 temp_message = True
                 if room is not None:
                     if len(room.members) == room.capacity:
-                        reply = f"[IN] {get_name(message.author)}\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + ("\n" + create_customized_url(room) if room.capacity in [6, 8] else "")
+                        reply = f"[IN] `{get_name(message.author)}`\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + ("\n" + create_customized_url(room) if room.capacity in [6, 8] else "")
                         delete_room(room)
                         room_to_clean = room
 
@@ -412,7 +409,7 @@ async def process_message(message):
                         else:
                             room.members.pop(room.members.index(message.author))
                             room.last_notice_timestamp = datetime.utcnow()
-                            reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                            reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + f"\n[OUT] `{get_name(message.author)}`"
                             room_to_clean = room
                     elif len(entered_rooms) == 0:
                         reply = "どこにも入ってないよ"
@@ -444,13 +441,13 @@ async def process_message(message):
                             else:
                                 room.members.pop(room.members.index(message.author))
                                 room.last_notice_timestamp = datetime.utcnow()
-                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + f"\n[OUT] {get_name(message.author)}"
+                                reply = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + f"\n[OUT] `{get_name(message.author)}`"
                                 room_to_clean = room
 
         if message.content.startswith("--rooms"):
             lines = []
             for room in rooms:
-                lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members) + "\n")
+                lines.append(f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + "\n")
             if lines:
                 reply = "\n".join(lines)
             else:
@@ -473,7 +470,7 @@ async def process_message(message):
                     temp_message = True
                 else:
                     delete_room(room)
-                    reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
+                    reply = f"爆破: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members)
                     room_to_clean = room
 
         if message.content.startswith("--help"):
@@ -531,8 +528,8 @@ async def notice_rooms():
         await asyncio.sleep(3)
         for room in rooms:
             if timedelta(minutes=8) <= datetime.utcnow() - room.last_notice_timestamp:
-                line = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"{get_name(member)}" for member in room.members)
-                sent_message = await channel.send(discord_compatible_str(line), allowed_mentions=allowed_mentions)
+                line = f"[{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members)
+                sent_message = await channel.send(line, allowed_mentions=allowed_mentions)
                 room.garbage_queue.append(sent_message.id)
                 room.last_notice_timestamp = datetime.utcnow()
                 while True:
@@ -710,7 +707,7 @@ async def on_message(message):
                 jst = datetime.utcnow() + timedelta(hours=9)
                 print(f"INPUT:\n{message.content}\n{jst}\n")
                 reply, room_to_clean, temp_message = await process_message(message)
-                sent_message = await message.channel.send(discord_compatible_str(reply), allowed_mentions=allowed_mentions)
+                sent_message = await message.channel.send(reply, allowed_mentions=allowed_mentions)
                 if room_to_clean:
                     await room_cleaner(room_to_clean, message, sent_message)
                 if temp_message:
