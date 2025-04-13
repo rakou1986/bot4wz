@@ -251,20 +251,22 @@ def delete_room(room):
 
 def create_customized_url(room):
     members = []
+    # room.rating_system in ["warzone", "lazuaoe"] = True が保障されている
+    if room.rating_system == "warzone":
+        url_base = "http://warzone.php.xdomain.jp/?action=NewGame&rakou_bot_param_members="
+        players = warzone_players
+    if room.rating_system == "lazuaoe":
+        url_base = "http://lazuaoe.php.xdomain.jp/rate/?act=mkt&rakou_bot_param_members="
+        players = lazuaoe_players
     for user in room.members:
         name = get_name(user)
-        match, similarity_score, idx = rapidfuzz.process.extractOne(name, warzone_players)
+        match, similarity_score, idx = rapidfuzz.process.extractOne(name, players)
         if 55 < similarity_score:
             name = match
         else:
             name = "**" + name
         members.append(name)
-    members_encoded = urllib.parse.quote(json.dumps(members, ensure_ascii=False))
-    # room.rating_system in ["warzone", "lazuaoe"] = True が保障されている
-    if room.rating_system == "warzone":
-        url = f"http://warzone.php.xdomain.jp/?action=NewGame&rakou_bot_param_members={members_encoded}"
-    if room.rating_system == "lazuaoe":
-        url = f"http://lazuaoe.php.xdomain.jp/rate/?act=mkt&rakou_bot_param_members={members_encoded}"
+    url = "".join([url_base, urllib.parse.quote(json.dumps(members, ensure_ascii=False))])
     discord_compatible_url = f"<{url}>"
     return discord_compatible_url
 
