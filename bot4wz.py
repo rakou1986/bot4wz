@@ -387,7 +387,7 @@ async def process_message(message):
                                 temp_message = True
                 if room is not None:
                     if len(room.members) == room.capacity:
-                        reply = f"[IN] `{get_name(message.author)}`\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + ", ".join(f"`{get_name(member)}`" for member in room.members) + "\n" + " ".join(f"{member.mention}" for member in room.members) + ("\n" + create_customized_url(room) if room.capacity in [6, 8] else "")
+                        reply = f"[IN] `{get_name(message.author)}`\n" + f"埋まり: [{room.number}] {room.name} ＠{room.capacity - len(room.members)}\n" + " ".join(f"{member.mention}" for member in room.members) + ("\n" + create_customized_url(room) if room.capacity in [6, 8] else "")
                         delete_room(room)
                         room_to_clean = room
 
