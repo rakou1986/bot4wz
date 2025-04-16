@@ -79,4 +79,11 @@ Discordとの接続が不安定？なときにexceptできないssl.SSLErrorが�
 【動作確認済みのOS】
 Windows 10
 Windows 11
+
+
+SPECIAL THANKS TO
+  Artworks: hachi(Tos)
+  Language support: k693
+  Provide exec environment: NicoBtan
+  And YOU! (Yes, you reading this♡)
 ```
