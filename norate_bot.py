@@ -49,8 +49,6 @@ import socket
 import sys
 import time
 import urllib
-import win32gui
-import win32con
 
 import discord
 from discord.ext import commands
@@ -718,18 +716,6 @@ async def on_message(message):
                 break
     await bot.process_commands(message)
 
-def disable_close_button():
-    # うっかり閉じるボタンで終了しないように、閉じるボタンを無効化する
-    hwnd = win32gui.GetForegroundWindow()
-    if hwnd:
-        menu = win32gui.GetSystemMenu(hwnd, False)
-        try:
-            win32gui.RemoveMenu(menu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
-        except Exception:
-            # シェルで2回目に実行するとボタンがないので例外が出る
-            pass
-        win32gui.DrawMenuBar(hwnd)
-
 def already_running():
     # うっかりbotを重複起動しちゃうのを防止
     current = psutil.Process()
@@ -738,7 +724,7 @@ def already_running():
     for proc in psutil.process_iter(attrs=["pid", "cmdline"]):
         try:
             cmdline = " ".join(proc.info["cmdline"])
-            if "bot4wz.py" in cmdline and proc.info["pid"] != current_pid and not "cmd" in proc.info["cmdline"]:
+            if "meetup_bot.py" in cmdline and proc.info["pid"] != current_pid and not "cmd" in proc.info["cmdline"]:
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
@@ -760,7 +746,6 @@ def already_running():
     return False
 
 def main():
-    disable_close_button()
     loop = asyncio.get_event_loop()
     tasks = []
     tasks.append(loop.create_task(temp_message_cleaner()))
